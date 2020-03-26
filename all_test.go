@@ -1,9 +1,8 @@
-package main
+package hackerrank
 
 import (
 	"fmt"
 	"testing"
-
 	"github.com/abucarlo/hackerrank/dictionaries"
 )
 
