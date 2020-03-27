@@ -5,31 +5,39 @@ import "sort"
 // FindPair returns the indices of the values
 // adding up to "money"
 func FindPair(cost []int32, money int32) (int, int) {
+	type element struct {
+		value int32
+		index int
+	}
 	// Index the values by original location.
-	// WARN This will not deal with duplicate values!
-	var index = map[int32]int{}
+	var indexed = []element{}
+
 	for i, value := range cost {
-		index[value] = i
+		indexed = append(indexed, element{ value, i})
 	}
 
 	// Sort descending, because of how binary search in Go works.
-	sort.Slice(cost, func(i, j int) bool { return cost[i] > cost[j] })
-	var high, low int32
+	sort.Slice(indexed, func(i int, j int) bool { return indexed[i].value > indexed[j].value })
+	var high, low int
 	var max int32 = 0
 
 	// TODO Start with money.
-	for i, hi := range cost {
-		var j = sort.Search(len(cost), func(j int) bool { return j > i && hi+cost[j] <= money })
-		if j == len(cost) {
+	for i, hi := range indexed {
+		j := sort.Search(len(indexed), func(j int) bool { return j > i && hi.value + indexed[j].value <= money })
+		if j == len(indexed) {
 			continue
 		}
-		if hi+cost[j] > max {
-			high = hi
-			low = cost[j]
-			max = high + low
+		lo := indexed[j]
+		if hi.value + indexed[j].value > max {
+			high = hi.index
+			low = lo.index
+			max = hi.value + lo.value
 		}
 	}
-	return index[low], index[high]
+	if low < high {
+		return low, high
+	} // else
+	return high, low
 }
 
 func whatFlavors(cost []int32, money int32) {

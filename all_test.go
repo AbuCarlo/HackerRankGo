@@ -11,6 +11,9 @@ func TestIceCream(t *testing.T) {
 	var sample00 = []int32 { 1, 4, 5, 3, 2 }
 	var x, y = search.FindPair(sample00, 4)
 	println(x, y)
+	var sample01 = []int32 { 2, 2, 4, 3 }
+	var l, r = search.FindPair(sample01, 4)
+	println(l, r)
 }
 
 func TestTwoStrings(t *testing.T) {
