@@ -4,7 +4,14 @@ import (
 	"fmt"
 	"testing"
 	"github.com/abucarlo/hackerrank/dictionaries"
+	"github.com/abucarlo/hackerrank/search"
 )
+
+func TestIceCream(t *testing.T) {
+	var sample00 = []int32 { 1, 4, 5, 3, 2 }
+	var x, y = search.FindPair(sample00, 4)
+	println(x, y)
+}
 
 func TestTwoStrings(t *testing.T) {
 	tests := []struct {
