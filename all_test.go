@@ -5,6 +5,7 @@ import (
 	"testing"
 	"github.com/abucarlo/hackerrank/dictionaries"
 	"github.com/abucarlo/hackerrank/search"
+	"github.com/abucarlo/hackerrank/dynamicprogramming"
 )
 
 func TestIceCream(t *testing.T) {
@@ -36,5 +37,16 @@ func TestTwoStrings(t *testing.T) {
 				t.Errorf("got %t, want %t", ans, test.common)
 			}
 		})
+	}
+}
+
+func TestGreedyFlorist(t *testing.T) {
+	result00 := dynamicprogramming.Optimize(3, []int32 { 2, 5, 6})
+	if (result00 != 13) {
+		t.Errorf("got %d, want %d", result00, 5)
+	}
+	result01 := dynamicprogramming.Optimize(2, []int32 { 2, 5, 6})
+	if (result01 != 15) {
+		t.Errorf("got %d, want %d", result00, 5)
 	}
 }
