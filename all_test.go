@@ -1,12 +1,17 @@
 package hackerrank
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/abucarlo/hackerrank/dictionaries"
 	"github.com/abucarlo/hackerrank/dynamicprogramming"
 	"github.com/abucarlo/hackerrank/search"
+	"github.com/golang/glog"
 )
 
 func TestIceCream(t *testing.T) {
@@ -74,5 +79,27 @@ func TestAbbreviation(t *testing.T) {
 				t.Errorf("%s should not match %s", test.source, test.target)
 			}
 		}
+	}
+}
+
+func TestAbbreviationTestCases(t *testing.T) {
+	name := "dynamicprogramming/input12.txt"
+	path, _ := filepath.Abs(name)
+	file, e := os.Open(path)
+	if e != nil {
+		glog.Error(e)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	scanner.Scan()
+	te := scanner.Text()
+	n, _ := strconv.Atoi(te)
+	for i := 0; i < n; i++ {
+		scanner.Scan()
+		source := scanner.Text()
+		scanner.Scan()
+		target := scanner.Text()
+		result := dynamicprogramming.Abbreviate(source, target)
+		fmt.Printf("Result of %s / %s: %t\n", source[0:10], target[0:10], result)
 	}
 }
