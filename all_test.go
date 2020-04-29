@@ -3,16 +3,17 @@ package hackerrank
 import (
 	"fmt"
 	"testing"
+
 	"github.com/abucarlo/hackerrank/dictionaries"
-	"github.com/abucarlo/hackerrank/search"
 	"github.com/abucarlo/hackerrank/dynamicprogramming"
+	"github.com/abucarlo/hackerrank/search"
 )
 
 func TestIceCream(t *testing.T) {
-	var sample00 = []int32 { 1, 4, 5, 3, 2 }
+	var sample00 = []int32{1, 4, 5, 3, 2}
 	var x, y = search.FindPair(sample00, 4)
 	println(x, y)
-	var sample01 = []int32 { 2, 2, 4, 3 }
+	var sample01 = []int32{2, 2, 4, 3}
 	var l, r = search.FindPair(sample01, 4)
 	println(l, r)
 }
@@ -41,12 +42,34 @@ func TestTwoStrings(t *testing.T) {
 }
 
 func TestGreedyFlorist(t *testing.T) {
-	result00 := dynamicprogramming.Optimize(3, []int32 { 2, 5, 6})
-	if (result00 != 13) {
+	result00 := dynamicprogramming.Optimize(3, []int32{2, 5, 6})
+	if result00 != 13 {
 		t.Errorf("got %d, want %d", result00, 5)
 	}
-	result01 := dynamicprogramming.Optimize(2, []int32 { 2, 5, 6})
-	if (result01 != 15) {
+	result01 := dynamicprogramming.Optimize(2, []int32{2, 5, 6})
+	if result01 != 15 {
 		t.Errorf("got %d, want %d", result00, 5)
+	}
+}
+
+func TestAbbreviation(t *testing.T) {
+	tests := []struct {
+		source string
+		target string
+		expect bool
+	}{
+		{"", "", true},
+		{"daBcd", "ABC", true},
+	}
+	for _, test := range tests {
+		if test.expect {
+			if !dynamicprogramming.Abbreviate(test.source, test.target) {
+				t.Errorf("%s should match %s", test.source, test.target)
+			}
+		} else {
+			if dynamicprogramming.Abbreviate(test.source, test.target) {
+				t.Errorf("%s should not match %s", test.source, test.target)
+			}
+		}
 	}
 }
