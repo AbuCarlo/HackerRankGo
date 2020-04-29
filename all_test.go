@@ -59,7 +59,10 @@ func TestAbbreviation(t *testing.T) {
 		expect bool
 	}{
 		{"", "", true},
-		{"daBcd", "ABC", true},
+		{"abc", "abc", true},
+		{"ABC", "ABC", true},
+		{"abCde", "C", true},
+		{"abcdE", "E", true},
 	}
 	for _, test := range tests {
 		if test.expect {
