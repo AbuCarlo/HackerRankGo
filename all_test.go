@@ -100,6 +100,6 @@ func TestAbbreviationTestCases(t *testing.T) {
 		scanner.Scan()
 		target := scanner.Text()
 		result := dynamicprogramming.Abbreviate(source, target)
-		fmt.Printf("Result of %s / %s: %t\n", source[0:10], target[0:10], result)
+		fmt.Printf("Result of %s... / %s...: %t\n", source[0:10], target[0:10], result)
 	}
 }

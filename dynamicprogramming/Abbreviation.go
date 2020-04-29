@@ -31,9 +31,9 @@ func abbreviateFrom(memo [][]bool, source []rune, sourcePosition int, target []r
 		return memo[sourcePosition][targetPosition]
 	}
 
-	// HACK
-	for len(memo[sourcePosition])-1 < targetPosition {
-		memo[sourcePosition] = append(memo[sourcePosition], false)
+	if targetPosition >= len(memo[sourcePosition]) {
+		appendage := make([]bool, targetPosition-len(memo[sourcePosition])+1)
+		memo[sourcePosition] = append(memo[sourcePosition], appendage...)
 	}
 
 	// Don't short-circuit!
