@@ -10,6 +10,7 @@ import (
 
 	"github.com/abucarlo/hackerrank/dictionaries"
 	"github.com/abucarlo/hackerrank/dynamicprogramming"
+	"github.com/abucarlo/hackerrank/recursion"
 	"github.com/abucarlo/hackerrank/search"
 	"github.com/golang/glog"
 )
@@ -102,4 +103,9 @@ func TestAbbreviationTestCases(t *testing.T) {
 		result := dynamicprogramming.Abbreviate(source, target)
 		fmt.Printf("Result of %s... / %s...: %t\n", source[0:10], target[0:10], result)
 	}
+}
+
+func TestSuperDigit(t *testing.T) {
+	result := recursion.SuperDigit("148", 3)
+	fmt.Printf("Result: %d", result)
 }
