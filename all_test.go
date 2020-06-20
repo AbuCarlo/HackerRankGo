@@ -84,7 +84,7 @@ func TestAbbreviation(t *testing.T) {
 }
 
 func TestAbbreviationTestCases(t *testing.T) {
-	name := "dynamicprogramming/input12.txt"
+	name := "dynamicprogramming/abbreviation-input12.txt"
 	path, _ := filepath.Abs(name)
 	file, e := os.Open(path)
 	if e != nil {
@@ -123,10 +123,10 @@ func TestFibonacci(t *testing.T) {
 
 func TestDecibinary(t *testing.T) {
 	tests := []struct {
-		index    int
-		expected int
+		index    int64
+		expected int64
 	}{
-		//{1, 0},
+		{1, 0},
 		{2, 1},
 		{3, 2},
 		{4, 10},
