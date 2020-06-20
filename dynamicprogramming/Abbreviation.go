@@ -5,7 +5,6 @@ import (
 )
 
 func testEquality(memo [][]bool, source []rune, i int, target []rune, j int) bool {
-	// fmt.Printf("Testing equality at %d & %d\n", i, j)
 	sourceRune := source[i]
 	targetRune := target[j]
 	// Once we elect to delete a lower-case letter from the source, we have to delete them all.
@@ -14,7 +13,6 @@ func testEquality(memo [][]bool, source []rune, i int, target []rune, j int) boo
 }
 
 func testDeletion(memo [][]bool, source []rune, i int, target []rune, j int) bool {
-	// fmt.Printf("Testing deletion from (%d, %d)\n", i, j)
 	sourceRune := source[i]
 	// If we're skipping characters..
 	return unicode.IsLower(sourceRune) && abbreviateFrom(memo, source, i+1, target, j)
