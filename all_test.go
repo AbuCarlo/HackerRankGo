@@ -109,3 +109,41 @@ func TestSuperDigit(t *testing.T) {
 	result := recursion.SuperDigit("148", 3)
 	fmt.Printf("Result: %d", result)
 }
+
+func TestDavisStaircase(t *testing.T) {
+	result := recursion.Climb(7)
+	fmt.Printf("Result: %v", result)
+}
+
+func TestFibonacci(t *testing.T) {
+	for i := 0; i <= 20; i++ {
+		fmt.Printf("Fibonacci(%d) = %d\n", i, recursion.Fibonacci(i))
+	}
+}
+
+func TestDecibinary(t *testing.T) {
+	tests := []struct {
+		index    int
+		expected int
+	}{
+		//{1, 0},
+		{2, 1},
+		{3, 2},
+		{4, 10},
+		{10, 100},
+		{8, 12},
+		{23, 23},
+		{19, 102},
+		{16, 14},
+		{26, 111},
+		{7, 4},
+		{6, 11},
+	}
+
+	for _, test := range tests {
+		actual := dynamicprogramming.NthDecibinaryNumber(test.index)
+		if actual != test.expected {
+			t.Errorf("%d-th number should be %d, not %d\n", test.index, test.expected, actual)
+		}
+	}
+}
