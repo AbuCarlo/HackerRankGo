@@ -31,7 +31,6 @@ func getDecibinaryNumbers(x int) []int {
 			result = append(result, prefix*10+least)
 		}
 	}
-	sort.Ints(result)
 	return result
 }
 
@@ -48,6 +47,7 @@ func NthDecibinaryNumber(n int) int {
 			break
 		}
 	}
+	sort.Ints(numerals)
 	return numerals[n-count-1]
 }
 
