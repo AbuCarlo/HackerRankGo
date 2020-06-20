@@ -13,7 +13,7 @@ func FindPair(cost []int32, money int32) (int, int) {
 	var indexed = []element{}
 
 	for i, value := range cost {
-		indexed = append(indexed, element{ value, i})
+		indexed = append(indexed, element{value, i})
 	}
 
 	// Sort descending, because of how binary search in Go works.
@@ -23,12 +23,12 @@ func FindPair(cost []int32, money int32) (int, int) {
 
 	// TODO Start with money.
 	for i, hi := range indexed {
-		j := sort.Search(len(indexed), func(j int) bool { return j > i && hi.value + indexed[j].value <= money })
+		j := sort.Search(len(indexed), func(j int) bool { return j > i && hi.value+indexed[j].value <= money })
 		if j == len(indexed) {
 			continue
 		}
 		lo := indexed[j]
-		if hi.value + indexed[j].value > max {
+		if hi.value+indexed[j].value > max {
 			high = hi.index
 			low = lo.index
 			max = hi.value + lo.value
@@ -38,8 +38,4 @@ func FindPair(cost []int32, money int32) (int, int) {
 		return low, high
 	} // else
 	return high, low
-}
-
-func whatFlavors(cost []int32, money int32) {
-
 }
