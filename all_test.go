@@ -147,3 +147,24 @@ func TestDecibinary(t *testing.T) {
 		}
 	}
 }
+
+func TestDecibinaryTestCases(t *testing.T) {
+	name := "dynamicprogramming/decibinary-input07.txt"
+	path, _ := filepath.Abs(name)
+	file, e := os.Open(path)
+	if e != nil {
+		glog.Error(e)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	scanner.Scan()
+	line := scanner.Text()
+	n, _ := strconv.Atoi(line)
+	for i := 0; i < n; i++ {
+		scanner.Scan()
+		line = scanner.Text()
+		x, _ := strconv.ParseInt(line, 10, 64)
+		actual := dynamicprogramming.NthDecibinaryNumber(x)
+		fmt.Printf("%d-th debinary number is %d\n", x, actual)
+	}
+}
