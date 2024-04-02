@@ -107,12 +107,12 @@ func TestAbbreviationTestCases(t *testing.T) {
 
 func TestSuperDigit(t *testing.T) {
 	result := recursion.SuperDigit("148", 3)
-	fmt.Printf("Result: %d", result)
+	fmt.Printf("Result: %d\n", result)
 }
 
 func TestDavisStaircase(t *testing.T) {
 	result := recursion.Climb(7)
-	fmt.Printf("Result: %v", result)
+	fmt.Printf("Result: %v\n", result)
 }
 
 func TestFibonacci(t *testing.T) {
@@ -151,6 +151,7 @@ func TestDecibinary(t *testing.T) {
 func TestDecibinaryTestCases(t *testing.T) {
 	name := "dynamicprogramming/decibinary-input07.txt"
 	path, _ := filepath.Abs(name)
+	fmt.Printf("Opening %s\n", name)
 	file, e := os.Open(path)
 	if e != nil {
 		glog.Error(e)
