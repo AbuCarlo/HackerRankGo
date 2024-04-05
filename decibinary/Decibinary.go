@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 )
 
 // See https://www.hackerrank.com/challenges/decibinary-numbers/problem
@@ -11,7 +12,7 @@ const MaximumIndex = 1e16
 // number allowed by the problem definition, i.e. the total number of
 // decibinary numerals needed past this point will exceed 
 // MaximumIndex.
-const MaximumDecimalNumber = 40 // 285112
+const MaximumDecimalNumber = 60 // 285112
 
 // The numbers do start at 0 (see the problem definition).
 var counts = func() []int64 {
@@ -57,6 +58,7 @@ var _tab = []int {
 	8, 12, 20, 28, 15, 17, 24,  7,
    19, 27, 23,  6, 26,  5,  4, 31};
 
+// The value must be unsigned in order to be right-shifted properly.
 func log2_32(value uint32) int {
    value |= value >> 1;
    value |= value >> 2;
@@ -88,5 +90,10 @@ func minimumDecibinaryDigits(n int) int {
 func main() {
 	for i, c := range counts {
 		fmt.Printf("n = %d, maximum size = %d, minimum size = %d, count = %d, sum = %d\n", i, maximumDecibinaryDigits(i), minimumDecibinaryDigits(i), c, partialSums[i]);
+	}
+	// The problem is 1-indexed.
+	for n := 1; n < 1000; n++ {
+		x := sort.Search(len(partialSums), func (d int) bool { return n < int(partialSums[d]) }) - 1;
+		fmt.Printf("Blah %d at %d\n", n, partialSums[x]);
 	}
 }
