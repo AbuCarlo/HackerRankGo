@@ -1,15 +1,24 @@
-package dynamicprogramming
+package main
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+)
+
+const MaximumIndex = 1e16
 
 var numbers = map[int64][]int64{0: {0}, 1: {1}}
 var counts = map[int64]int64{0: 1, 1: 1}
 
 func countDecibinaryNumbers(x int64) int64 {
-	result := counts[x]
-	if result > 0 {
+	if x % 2 == 1 {
+		return countDecibinaryNumbers(x - 1)
+	}
+	result, ok := counts[x]
+	if ok {
 		return result
 	}
+
 	for least := x % 2; least < 10 && least <= x; least += 2 {
 		most := (x - least) >> 1
 		result += countDecibinaryNumbers(most)
@@ -53,6 +62,14 @@ func NthDecibinaryNumber(x int64) int64 {
 	return numerals[x-count-1]
 }
 
-func decibinaryNumbers(x int64) int64 {
-	return NthDecibinaryNumber(x)
+
+func main() {
+	var sum int64
+	for x := int64(0); sum < MaximumIndex; x++ {
+		result := countDecibinaryNumbers(x)
+		sum += result
+		fmt.Printf("x = %d, count = %d, sum = %d\n", x, result, sum)
+	}
+
+	fmt.Printf("Stopped at sum %d\n", sum)
 }
