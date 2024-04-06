@@ -87,6 +87,24 @@ func minimumDecibinaryDigits(n int) int {
 	return result
 }
 
+func lowestDecibinaryNumeral(n int) []int {
+	result := []int{}
+	for n > 0 {
+		var digit int
+		if n < 10 {
+			digit = n
+		} else if n % 2 == 0 {
+			digit = 8
+		} else {
+			digit = 9
+		}
+		result = append(result, digit)
+		n -= digit
+		n /= 2
+	}
+	return result
+}
+
 func main() {
 	for i, c := range counts {
 		fmt.Printf("n = %d, maximum size = %d, minimum size = %d, count = %d, sum = %d\n", i, maximumDecibinaryDigits(i), minimumDecibinaryDigits(i), c, partialSums[i]);
