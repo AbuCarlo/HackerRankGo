@@ -12,7 +12,7 @@ const MaximumIndex = 1e16
 // number allowed by the problem definition, i.e. the total number of
 // decibinary numerals needed past this point will exceed 
 // MaximumIndex.
-const MaximumDecimalNumber = 60 // 285112
+const MaximumDecimalNumber = 285112
 
 // The numbers do start at 0 (see the problem definition).
 var counts = func() []int64 {
@@ -84,6 +84,17 @@ func minimumDecibinaryDigits(n int) int {
 		result++
 	}
 
+	return result
+}
+
+func decibinaryToBinary(d int64) int64 {
+	significance := int64(1)
+	result := int64(0)
+	for d > 0 {
+		result += int64(significance) * (d % 10)
+		d /= 10
+		significance *= 2
+	}
 	return result
 }
 
