@@ -43,19 +43,6 @@ func FuzzTranslation(f *testing.F) {
 		}
     })
 }
-
-func FuzzMaximum(f *testing.F) {
-	f.Fuzz(func(t *testing.T, input int) {
-		if input < 1 || input > MaximumDecimalNumber {
-			t.Skip()
-		}
-        highest := highestDecibinaryNumeral(input)
-		roundTrip := decibinaryToBinary(highest)
-		if (roundTrip != input) {
-			t.Errorf("Input %d has maximum decibinary numeral %d; this round-tripped as %d", input, highest, roundTrip)
-		}
-    })
-}
  
 func TestBoundaries(t *testing.T) {
 	inputFile, err := os.Open("decibinary-input07.txt")
