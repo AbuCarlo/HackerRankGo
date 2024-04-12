@@ -16,51 +16,6 @@ func printDecibinaryNumeral(n []int)  string {
 	return s
 }
 
-/*
-func XTestEnumeration(t *testing.T) {
-	n := 10
-	numeral := lowestDecibinaryNumeral(n)
-	t.Logf("10 => %s", printDecibinaryNumeral(numeral))
-	for i := 1; i < int(counts[n]); i++ {
-		// Optional: set capacity to longest numeral?
-		copy := append(make([]int, 0, len(numeral)), numeral...)
-		carries := i
-		// Transformations...
-		for j := 0; carries > 0; j++ {
-			if copy[j] == 0 || copy[j] == 1 {
-				continue
-			}
-			// You *have* to carry these.
-			if copy[j] > 9 {
-				// You can only carry forward an even number.
-				reduction := 8
-				if copy[j] % 2 == 0 {
-					reduction = 9
-				}
-				remainder := copy[j] - reduction
-				copy[j] = reduction
-				if j + 1 == len(copy) {
-					copy = append(copy, remainder)
-				} else {
-					copy[j + 1] += remainder >> 1
-				}
-			}
-			// *Now* perform additional transformations.
-			k := min(carries, copy[j] / 2)
-			copy[j] -= k * 2
-			if len(copy) == j + 1 {
-				copy = append(copy, k)
-			} else {
-				copy[j + 1] += k
-			}
-			carries -= k
-		}
-		t.Logf("10 => %s", printDecibinaryNumeral(copy))
-	}
-}
-
-*/
-
 func readInt64(scanner *bufio.Scanner) []int64 {
 	inputs := make([]int64, 0)
     for scanner.Scan() {
@@ -75,16 +30,29 @@ func FuzzTranslation(f *testing.F) {
 		if input < 1 || input > MaximumDecimalNumber {
 			t.Skip()
 		}
-        highest := highestDecibinaryNumeral(int64(input))
+        highest := highestDecibinaryNumeral(input)
 		roundTrip := decibinaryToBinary(highest)
 		if (roundTrip != input) {
 			t.Errorf("Input %d has maximum decibinary numeral %d; this round-tripped as %d", input, highest, roundTrip)
 		}
 
-		lowest := highestDecibinaryNumeral(int64(input))
+		lowest := highestDecibinaryNumeral(input)
 		roundTrip = decibinaryToBinary(lowest)
 		if (roundTrip != input) {
 			t.Errorf("Input %d has minimum decibinary numeral %d; this round-tripped as %d", input, lowest, roundTrip)
+		}
+    })
+}
+
+func FuzzMaximum(f *testing.F) {
+	f.Fuzz(func(t *testing.T, input int) {
+		if input < 1 || input > MaximumDecimalNumber {
+			t.Skip()
+		}
+        highest := highestDecibinaryNumeral(input)
+		roundTrip := decibinaryToBinary(highest)
+		if (roundTrip != input) {
+			t.Errorf("Input %d has maximum decibinary numeral %d; this round-tripped as %d", input, highest, roundTrip)
 		}
     })
 }

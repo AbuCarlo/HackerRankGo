@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sort"
 )
 
 // See https://www.hackerrank.com/challenges/decibinary-numbers/problem
@@ -120,15 +119,15 @@ func lowestDecibinaryNumeral(n int) int64 {
 	return result
 }
 
-func highestDecibinaryNumeral(d int64) int64 {
+func highestDecibinaryNumeral(n int) int64 {
 	result := int64(0)
-	bit := int64(1) << 62
-	for d & bit == 0 {
+	bit := 1 << 30
+	for n & bit == 0 {
 		bit >>= 1
 	}
 	for bit > 0 {
-		if d & bit != 0 {
-			result = result * 10 + int64(1)
+		if n & bit != 0 {
+			result = result * 10 + 1
 		} else {
 			result = result * 10
 		}
@@ -138,12 +137,5 @@ func highestDecibinaryNumeral(d int64) int64 {
 }
 
 func main() {
-	for i, c := range counts {
-		fmt.Printf("n = %d, maximum size = %d, minimum size = %d, count = %d, sum = %d\n", i, maximumDecibinaryDigits(i), minimumDecibinaryDigits(i), c, partialSums[i]);
-	}
-	// The problem is 1-indexed.
-	for n := 1; n < 1000; n++ {
-		x := sort.Search(len(partialSums), func (d int) bool { return n < int(partialSums[d]) }) - 1;
-		fmt.Printf("Blah %d at %d\n", n, partialSums[x]);
-	}
+	fmt.Println("Hello!")
 }
