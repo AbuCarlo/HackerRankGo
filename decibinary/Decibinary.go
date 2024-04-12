@@ -103,6 +103,8 @@ func decibinaryToBinary(d int64) int {
 
 func lowestDecibinaryNumeral(n int) int64 {
 	result := int64(0)
+	place := int64(1)
+	// Go from lower-order to higher.
 	for n > 0 {
 		var digit int
 		if n < 10 {
@@ -112,9 +114,10 @@ func lowestDecibinaryNumeral(n int) int64 {
 		} else {
 			digit = 9
 		}
-		result = result * 10 + int64(digit)
+		result += int64(digit) * place
 		n -= digit
 		n /= 2
+		place *= 10
 	}
 	return result
 }
@@ -137,5 +140,5 @@ func highestDecibinaryNumeral(n int) int64 {
 }
 
 func main() {
-	fmt.Println("Hello!")
+	fmt.Println(lowestDecibinaryNumeral(520))
 }

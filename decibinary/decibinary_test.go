@@ -8,14 +8,6 @@ import (
 	"testing"
 )
 
-func printDecibinaryNumeral(n []int)  string {
-	s := ""
-	for _, d := range n {
-		s = strconv.Itoa(d) + s
-	}
-	return s
-}
-
 func readInt64(scanner *bufio.Scanner) []int64 {
 	inputs := make([]int64, 0)
     for scanner.Scan() {
@@ -36,7 +28,7 @@ func FuzzTranslation(f *testing.F) {
 			t.Errorf("Input %d has maximum decibinary numeral %d; this round-tripped as %d", input, highest, roundTrip)
 		}
 
-		lowest := highestDecibinaryNumeral(input)
+		lowest := lowestDecibinaryNumeral(input)
 		roundTrip = decibinaryToBinary(lowest)
 		if (roundTrip != input) {
 			t.Errorf("Input %d has minimum decibinary numeral %d; this round-tripped as %d", input, lowest, roundTrip)
