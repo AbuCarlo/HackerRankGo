@@ -21,7 +21,6 @@ var counts = func() []int64 {
 	a[0] = 1
 	a[1] = 1
 
-	
 	for n := 2; n <= MaximumDecimalNumber; n += 2 {
 		var count int64
 
@@ -32,14 +31,19 @@ var counts = func() []int64 {
 		a[n] = count
 		// For any even decimal number, the final digit will be no more than
 		// 8. It's always possible to add 1 to final digit, giving you the next
-		// decimal integer, which is perforce odd. Any multiple of 2 can be 
-		// halved and shifted leftward, but this additional 1 cannot. 
+		// decimal integer, which is perforce odd. For any digit, we can subtract
+		// 2, halve it, and shift it leftward, to the next-higher order digit, 
+		// but an odd digit cannot be reduced below 1.
 		a[n + 1] = count
 	}
 
 	return a
 }()
 
+// This array allows a binary search for a decimal number based on the rank
+// of the decibinary numeral. In other words, if we want the xth decibinary 
+// numeral, we can look for the lowest value in this array > than x. Its index
+// will be the decimal number 1 greater than the one we want.
 var partialSums = func() []int64 {
 	var sum int64
 	a := make([]int64, len(counts))
@@ -87,19 +91,19 @@ func minimumDecibinaryDigits(n int) int {
 	return result
 }
 
-func decibinaryToBinary(d int64) int64 {
-	significance := int64(1)
-	result := int64(0)
+func decibinaryToBinary(d int64) int {
+	significance := 1
+	result := 0
 	for d > 0 {
-		result += int64(significance) * (d % 10)
+		result += significance * int(d % 10)
 		d /= 10
 		significance *= 2
 	}
 	return result
 }
 
-func lowestDecibinaryNumeral(n int) []int {
-	result := []int{}
+func lowestDecibinaryNumeral(n int) int64 {
+	result := int64(0)
 	for n > 0 {
 		var digit int
 		if n < 10 {
@@ -109,9 +113,26 @@ func lowestDecibinaryNumeral(n int) []int {
 		} else {
 			digit = 9
 		}
-		result = append(result, digit)
+		result = result * 10 + int64(digit)
 		n -= digit
 		n /= 2
+	}
+	return result
+}
+
+func highestDecibinaryNumeral(d int64) int64 {
+	result := int64(0)
+	bit := int64(1) << 62
+	for d & bit == 0 {
+		bit >>= 1
+	}
+	for bit > 0 {
+		if d & bit != 0 {
+			result = result * 10 + int64(1)
+		} else {
+			result = result * 10
+		}
+		bit >>= 1
 	}
 	return result
 }

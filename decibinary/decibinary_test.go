@@ -16,6 +16,7 @@ func printDecibinaryNumeral(n []int)  string {
 	return s
 }
 
+/*
 func XTestEnumeration(t *testing.T) {
 	n := 10
 	numeral := lowestDecibinaryNumeral(n)
@@ -58,6 +59,8 @@ func XTestEnumeration(t *testing.T) {
 	}
 }
 
+*/
+
 func readInt64(scanner *bufio.Scanner) []int64 {
 	inputs := make([]int64, 0)
     for scanner.Scan() {
@@ -67,6 +70,25 @@ func readInt64(scanner *bufio.Scanner) []int64 {
 	return inputs
 }
 
+func FuzzTranslation(f *testing.F) {
+	f.Fuzz(func(t *testing.T, input int) {
+		if input < 1 || input > MaximumDecimalNumber {
+			t.Skip()
+		}
+        highest := highestDecibinaryNumeral(int64(input))
+		roundTrip := decibinaryToBinary(highest)
+		if (roundTrip != input) {
+			t.Errorf("Input %d has maximum decibinary numeral %d; this round-tripped as %d", input, highest, roundTrip)
+		}
+
+		lowest := highestDecibinaryNumeral(int64(input))
+		roundTrip = decibinaryToBinary(lowest)
+		if (roundTrip != input) {
+			t.Errorf("Input %d has minimum decibinary numeral %d; this round-tripped as %d", input, lowest, roundTrip)
+		}
+    })
+}
+ 
 func TestBoundaries(t *testing.T) {
 	inputFile, err := os.Open("decibinary-input07.txt")
     if err != nil {
