@@ -166,6 +166,10 @@ func highestDecibinaryNumeral(n int) int64 {
 	return result
 }
 
+func locate(index int) int64 {
+	return int64(0)
+}
+
 func main() {
 	fmt.Println(lowestDecibinaryNumeral(520))
 }
