@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -24,9 +25,41 @@ func BenchmarkLog2(b *testing.B) {
 }
 
 func BenchmarkIntToArray(b *testing.B) {
+	inputs := []int64{ 100, 1000, 74383, 35700000, 1000000000000 }
+
+	for _, input := range inputs {
+        b.Run(fmt.Sprintf("input_size_%d", input), func(b *testing.B) {
+            for i := 0; i < b.N; i++ {
+                decibinaryToArray(input)
+            }
+        })
+    }
+
 	for n := 0; n < b.N; n++ {
-		decibinaryToArray(1000)
+		decibinaryToArray(100000000)
 	}
+}
+
+func FuzzRoundTripThroughArray(f * testing.F) {
+	f.Fuzz(func (t *testing.T, input int) {
+		if input < 1 || input > MaximumDecimalNumber {
+			t.Skip()
+		}
+		highest := highestDecibinaryNumeral(input)
+		highestArray := decibinaryToArray(highest)
+		x := decibinaryArrayToDecimal(highestArray)
+		if x != input {
+			t.Errorf("Input %d has minimum decibinary numeral %d; this round-tripped as %d", input, highest, x)
+		}
+
+		lowest := lowestDecibinaryNumeral(input)
+		lowestArray := decibinaryToArray(lowest)
+		y := decibinaryArrayToDecimal(lowestArray)
+		if y != input {
+			t.Errorf("Input %d has maximum decibinary numeral %d; this round-tripped as %d", input, highest, x)
+
+		}
+	})
 }
 
 func FuzzTranslation(f *testing.F) {

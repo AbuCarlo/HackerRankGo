@@ -96,14 +96,25 @@ func minimumDecibinaryDigits(n int) int {
 
 func decibinaryToArray(d int64) []int {
 	// It's much faster to request an initial capacity.
+	// The reallocation, if this number is 16, is expensive,
+	// whereas an allocation of 32 is cheap. Since most of 
+	// inputs are large, let's just go with 32.
 	a := make([]int, 0, 32)
 	for ; d > 0; d /= 10 {
 		digit := int(d % 10)
 		a = append(a, digit)
 	}
-
 	slices.Reverse(a)
 	return a
+}
+
+func decibinaryArrayToDecimal(d []int) int {
+	result := 0
+	for _, digit := range d {
+		result *= 2
+		result += digit
+	}
+	return result
 }
 
 func decibinaryToBinary(d int64) int {
