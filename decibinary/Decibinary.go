@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 )
 
 // See https://www.hackerrank.com/challenges/decibinary-numbers/problem
@@ -55,6 +56,9 @@ var partialSums = func() []int64 {
 
 // Taken from https://stackoverflow.com/a/11398748/476942
 
+var _ uint64
+
+// Using []int8 does not seem to affect the speed.
 var _tab = []int {
 	0,  9,  1, 10, 13, 21,  2, 29,
    11, 14, 16, 18, 22, 25,  3, 30,
@@ -68,7 +72,7 @@ func log2_32(value uint32) int {
    value |= value >> 4;
    value |= value >> 8;
    value |= value >> 16;
-   return _tab[(value*0x07C4ACDD) >> 27];
+   return int(_tab[(value*0x07C4ACDD) >> 27])
 }
 
 func maximumDecibinaryDigits(n int) int {
@@ -88,6 +92,18 @@ func minimumDecibinaryDigits(n int) int {
 	}
 
 	return result
+}
+
+func decibinaryToArray(d int64) []int {
+	// It's much faster to request an initial capacity.
+	a := make([]int, 0, 32)
+	for ; d > 0; d /= 10 {
+		digit := int(d % 10)
+		a = append(a, digit)
+	}
+
+	slices.Reverse(a)
+	return a
 }
 
 func decibinaryToBinary(d int64) int {
