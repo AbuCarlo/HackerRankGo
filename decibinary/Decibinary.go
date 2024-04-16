@@ -202,7 +202,7 @@ func locate(rank int64) int64 {
 		countForSuffix := counts[decimalValueOfSuffix]
 		// If there are enough numerals with this prefix, we leave
 		// it, and just reduce the suffix further.
-		if target <= countForSuffix+countForPrefix {
+		if target < countForSuffix+countForPrefix {
 			result = append(result, suffix[0])
 			suffix = suffix[1:]
 			countForPrefix += countForSuffix
@@ -238,5 +238,13 @@ func rankToNative(rank int64) int {
 }
 
 func main() {
-	fmt.Println(lowestDecibinaryNumeral(520))
+	var lastQuery int64 = 0
+	for i := 0; i < 10; i++ {
+		result := []int64{}
+		for j := lastQuery + 1; j <= lastQuery + counts[i]; j++ {
+			result = append(result, locate(j))
+		}
+		fmt.Printf("%d: %v\n", i, result)
+		lastQuery += counts[i]
+	}
 }
