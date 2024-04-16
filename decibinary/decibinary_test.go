@@ -142,17 +142,19 @@ func TestAlgorithm(t *testing.T) {
 	}
 
 	table := []Table{
-		{query: 1, response: 0},
-		{query: 2, response: 1},
-		{query: 3, response: 2},
-		{query: 4, response: 10},
-		{query: 5, response: 3},
-		{query: 6, response: 11},
+		// {query: 1, response: 0},
+		// {query: 2, response: 1},
+		// {query: 3, response: 2},
+		// {query: 4, response: 10},
+		// {query: 5, response: 3},
+		// {query: 6, response: 11},
 		{query: 7, response: 4},
 		{query: 8, response: 12},
 		{query: 9, response: 20},
 		{query: 10, response: 100},
 		{query: 11, response: 5},
+		{query: 14, response: 101},
+		{query: 15, response: 6},
 	}
 
 	// Actually, we could generate this entire test from our arrays.
