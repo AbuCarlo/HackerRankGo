@@ -187,6 +187,7 @@ func locate(rank int64) int64 {
 	ceiling := counts[nativeValue]
 	// The rank *within* the decibinary numerals for this native value.
 	subrank := rank - (partialSums[nativeValue] - counts[nativeValue])
+	countForPrefix := int64(0)
 	highest := highestDecibinaryNumeral(nativeValue)
 	// These array elements go from *most* significant to least.
 	suffix := decibinaryToArray(highest)
@@ -205,16 +206,16 @@ func locate(rank int64) int64 {
 		countForSuffix := counts[decimalValueOfSuffix]
 		// If there are enough numerals with this prefix, we leave
 		// it, and just reduce the suffix further.
-		if ceiling-countForSuffix < subrank {
+		if ceiling-countForSuffix-countForPrefix < subrank {
 			result = append(result, suffix[0])
 			suffix = suffix[1:]
-			ceiling -= counts[decimalValueOfSuffix]
+			countForPrefix += countForSuffix
 		} else {
 			// Shift a value rightward. On the next iteration,
 			// the suffix will have more bits to permute.
 			suffix[0]--
 			suffix[1] += 2
-			ceiling -= counts[decimalValueOfSuffix]
+			countForPrefix += countForSuffix
 		}
 	}
 	result = append(result, suffix[0])
