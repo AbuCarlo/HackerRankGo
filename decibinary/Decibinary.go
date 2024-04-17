@@ -16,19 +16,30 @@ const MaximumIndex = 1e16
 // MaximumIndex.
 const MaximumDecimalNumber = 285112
 
-// The numbers do start at 0 (see the problem definition).
-var counts = func() []int64 {
+var countsBySize = make(map[int]map[int]int)
+
+func countNumerals() []int64 {
 	// Allow one more element for the odd number 285113
 	a := make([]int64, MaximumDecimalNumber+2)
 	a[0] = 1
 	a[1] = 1
 
-	for n := 2; n <= MaximumDecimalNumber; n += 2 {
-		var count int64
+	countsBySize[0] = map[int]int{ 0: 1}
+	countsBySize[1] = map[int]int{ 1: 1}
 
+	for n := 2; n <= MaximumDecimalNumber; n += 2 {
+		countsBySize[n] = make(map[int]int)
+		var count int64
+		// Populate the least-significant "decibinary" digit. How 
+		// many decibinary numerals correspond to the remaining 
+		// value? 
 		for least := n % 2; least < 10 && least <= n; least += 2 {
 			most := (n - least) >> 1
 			count += a[most]
+
+			for prefixSize, prefixCount := range countsBySize[most] {
+				countsBySize[n][prefixSize+1] += prefixCount
+			}
 		}
 		a[n] = count
 		// For any even decimal number, the final digit will be no more than
@@ -40,7 +51,10 @@ var counts = func() []int64 {
 	}
 
 	return a
-}()
+}
+
+// The numbers do start at 0 (see the problem definition).
+var counts = countNumerals()
 
 // This array allows a binary search for a decimal number based on the rank
 // of the decibinary numeral. In other words, if we want the xth decibinary
