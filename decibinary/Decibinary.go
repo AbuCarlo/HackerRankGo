@@ -189,13 +189,27 @@ func highestDecibinaryNumeral(n int) int64 {
 	return result
 }
 
+func countSuffixes(value int, size int) int {
+	count := 0
+	if value > 1 && value % 2 == 1 {
+		value--
+	}
+	for s, f := range countsBySize[value] {
+		if s <= size {
+			count += f
+		}
+	}
+	return count
+}
+
 func locate(rank int64) int64 {
 	if rank < 1 {
 		panic("Queries are 1-based.")
 	}
 	result := make([]int, 0, 16)
 	nativeValue := rankToNative(rank)
-	// How many numerals do we want to skip over, proceeding backward?
+	// How many numerals do we want to skip over, proceeding backward
+	// from the maximum numeral for this native value?
 	target := partialSums[nativeValue] - rank
 	countForPrefix := int64(0)
 	highest := highestDecibinaryNumeral(nativeValue)
@@ -213,13 +227,13 @@ func locate(rank int64) int64 {
 			continue
 		}
 		decimalValueOfSuffix := decibinaryArrayToDecimal(suffix[1:])
-		countForSuffix := counts[decimalValueOfSuffix]
+		countForSuffix := int64(countSuffixes(decimalValueOfSuffix, len(suffix) - 1))
 		// If there are enough numerals with this prefix, we leave
 		// it, and just reduce the suffix further.
 		if target < countForSuffix+countForPrefix {
 			result = append(result, suffix[0])
 			suffix = suffix[1:]
-			countForPrefix += countForSuffix
+			countForPrefix += countForPrefix + countForSuffix
 		} else {
 			// Shift a value rightward. On the next iteration,
 			// the suffix will have more bits to permute.
@@ -229,7 +243,7 @@ func locate(rank int64) int64 {
 			if suffix[0] == 0 {
 				suffix = suffix[1:]
 			}
-			// countForPrefix += countForSuffix
+			countForPrefix += countForSuffix
 		}
 	}
 	result = append(result, suffix[0])
