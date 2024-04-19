@@ -136,6 +136,27 @@ func highestDecibinaryNumeral(n int) int64 {
 	return result
 }
 
+func lowestDecibinaryNumeral(n int) int64 {
+	result := int64(0)
+	place := int64(1)
+	// Go from lower-order to higher.
+	for n > 0 {
+		var digit int
+		if n < 10 {
+			digit = n
+		} else if n%2 == 0 {
+			digit = 8
+		} else {
+			digit = 9
+		}
+		result += int64(digit) * place
+		n -= digit
+		n /= 2
+		place *= 10
+	}
+	return result
+}
+
 func countSuffixes(value int, size int) int {
 	if value == 0 {
 		return 1
@@ -220,7 +241,7 @@ func rankToNative(rank int64) int {
 func main() {
 
 	var lastQuery int64 = 0
-	for i := 0; i <= 11; i++ {
+	for i := 0; i <= 16; i++ {
 		result := []int64{}
 		for j := lastQuery + 1; j <= lastQuery+counts[i]; j++ {
 			result = append(result, locate(j))

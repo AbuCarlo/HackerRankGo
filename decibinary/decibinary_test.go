@@ -17,12 +17,6 @@ func readInt64(scanner *bufio.Scanner) []int64 {
 	return inputs
 }
 
-func BenchmarkLog2(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		log2_32(50)
-	}
-}
-
 func BenchmarkIntToArray(b *testing.B) {
 	inputs := []int64{100, 1000, 74383, 35700000, 1000000000000}
 
@@ -117,7 +111,7 @@ func TestBoundaries(t *testing.T) {
 	defer outputFile.Close()
 	outputs := readInt64(bufio.NewScanner(outputFile))
 	if size != int64(len(outputs)) {
-		t.Fatalf("Expected %d inputs; got %d", size, len(outputs))
+		t.Fatalf("Expected %d outputs; got %d", size, len(outputs))
 	}
 
 	for i := 0; i < int(size); i++ {
