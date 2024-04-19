@@ -24,7 +24,7 @@ func countNumerals() []int64 {
 	a[0] = 1
 	a[1] = 1
 
-	countsBySize[0] = map[int]int{ 0: 1}
+	// countsBySize[0] = map[int]int{ 0: 1}
 	countsBySize[1] = map[int]int{ 1: 1}
 
 	for n := 2; n <= MaximumDecimalNumber; n += 2 {
@@ -37,7 +37,19 @@ func countNumerals() []int64 {
 			most := (n - least) >> 1
 			count += a[most]
 
-			for prefixSize, prefixCount := range countsBySize[most] {
+			if most == 0 {
+				countsBySize[n][1] = 1
+				// There are no more significant digits.
+				// This numeral has 1-digit representation.
+				continue
+			}
+
+			key := most
+			if key > 1 && key % 2 == 1 {
+				key--
+			}
+		
+			for prefixSize, prefixCount := range countsBySize[key] {
 				countsBySize[n][prefixSize+1] += prefixCount
 			}
 		}
@@ -190,6 +202,9 @@ func highestDecibinaryNumeral(n int) int64 {
 }
 
 func countSuffixes(value int, size int) int {
+	if value == 0 {
+		return 1
+	}
 	count := 0
 	if value > 1 && value % 2 == 1 {
 		value--
@@ -233,7 +248,7 @@ func locate(rank int64) int64 {
 		if target < countForSuffix+countForPrefix {
 			result = append(result, suffix[0])
 			suffix = suffix[1:]
-			countForPrefix += countForPrefix + countForSuffix
+			// countForPrefix += countForPrefix + countForSuffix
 		} else {
 			// Shift a value rightward. On the next iteration,
 			// the suffix will have more bits to permute.
@@ -241,6 +256,8 @@ func locate(rank int64) int64 {
 			suffix[1] += 2
 			// This step will probably be taken care of above.
 			if suffix[0] == 0 {
+				// Don't throw away a 0 in the middle of the numeral!
+				result = append(result, 0)
 				suffix = suffix[1:]
 			}
 			countForPrefix += countForSuffix
@@ -266,13 +283,22 @@ func rankToNative(rank int64) int {
 }
 
 func main() {
+
 	var lastQuery int64 = 0
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 11; i++ {
 		result := []int64{}
 		for j := lastQuery + 1; j <= lastQuery + counts[i]; j++ {
 			result = append(result, locate(j))
 		}
 		fmt.Printf("%d: %v\n", i, result)
 		lastQuery += counts[i]
+	}
+	// Got: 5124106013121426
+	// ,,,,,5124105853195114
+	fmt.Printf("Hello: %d\n", locate(4284323577117864))
+
+	onlineSampleInput := []int64{ 1, 2, 3, 4, 10 }
+	for _, input := range onlineSampleInput {
+		fmt.Println(locate(input))
 	}
 }
