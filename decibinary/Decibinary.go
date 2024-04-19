@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/bits"
 	"slices"
 	"sort"
 )
@@ -16,26 +17,28 @@ const MaximumIndex = 1e16
 // MaximumIndex.
 const MaximumDecimalNumber = 285112
 
+// The numbers do start at 0 (see the problem definition).
+// Allow one more element for the odd number 285113
+var counts = make([]int64, MaximumDecimalNumber+2)
+var partialSums = make([]int64, MaximumDecimalNumber+2)
 var countsBySize = make(map[int]map[int]int)
 
-func countNumerals() []int64 {
-	// Allow one more element for the odd number 285113
-	a := make([]int64, MaximumDecimalNumber+2)
-	a[0] = 1
-	a[1] = 1
+func countNumerals() {
 
-	// countsBySize[0] = map[int]int{ 0: 1}
-	countsBySize[1] = map[int]int{ 1: 1}
+	counts[0] = 1
+	counts[1] = 1
+
+	countsBySize[1] = map[int]int{1: 1}
 
 	for n := 2; n <= MaximumDecimalNumber; n += 2 {
 		countsBySize[n] = make(map[int]int)
 		var count int64
-		// Populate the least-significant "decibinary" digit. How 
-		// many decibinary numerals correspond to the remaining 
-		// value? 
+		// Populate the least-significant "decibinary" digit. How
+		// many decibinary numerals correspond to the remaining
+		// value?
 		for least := n % 2; least < 10 && least <= n; least += 2 {
 			most := (n - least) >> 1
-			count += a[most]
+			count += counts[most]
 
 			if most == 0 {
 				countsBySize[n][1] = 1
@@ -45,81 +48,39 @@ func countNumerals() []int64 {
 			}
 
 			key := most
-			if key > 1 && key % 2 == 1 {
+			if key > 1 && key%2 == 1 {
 				key--
 			}
-		
+
 			for prefixSize, prefixCount := range countsBySize[key] {
 				countsBySize[n][prefixSize+1] += prefixCount
 			}
 		}
-		a[n] = count
+		counts[n] = count
 		// For any even decimal number, the final digit will be no more than
 		// 8. It's always possible to add 1 to final digit, giving you the next
 		// decimal integer, which is perforce odd. For any digit, we can subtract
 		// 2, halve it, and shift it leftward, to the next-higher order digit,
 		// but an odd digit cannot be reduced below 1.
-		a[n+1] = count
+		counts[n+1] = count
 	}
-
-	return a
 }
-
-// The numbers do start at 0 (see the problem definition).
-var counts = countNumerals()
 
 // This array allows a binary search for a decimal number based on the rank
 // of the decibinary numeral. In other words, if we want the xth decibinary
 // numeral, we can look for the lowest value in this array > than x. Its index
 // will be the decimal number 1 greater than the one we want.
-var partialSums = func() []int64 {
+func calculatePartialSums() {
 	var sum int64
-	a := make([]int64, len(counts))
 	for i, c := range counts {
 		sum += c
-		a[i] = sum
+		partialSums[i] = sum
 	}
-	return a
-}()
-
-// Taken from https://stackoverflow.com/a/11398748/476942
-
-var _ uint64
-
-// Using []int8 does not seem to affect the speed.
-var _tab = []int{
-	0, 9, 1, 10, 13, 21, 2, 29,
-	11, 14, 16, 18, 22, 25, 3, 30,
-	8, 12, 20, 28, 15, 17, 24, 7,
-	19, 27, 23, 6, 26, 5, 4, 31}
-
-// The value must be unsigned in order to be right-shifted properly.
-func log2_32(value uint32) int {
-	value |= value >> 1
-	value |= value >> 2
-	value |= value >> 4
-	value |= value >> 8
-	value |= value >> 16
-	return int(_tab[(value*0x07C4ACDD)>>27])
 }
 
-func maximumDecibinaryDigits(n int) int {
-	return log2_32(uint32(n)) + 1
-}
-
-func minimumDecibinaryDigits(n int) int {
-	// Does 0 require 1 digit or 0?
-	result := 0
-	for n > 0 {
-		if n%2 == 1 {
-			n--
-		}
-		n -= min(n, 8)
-		n /= 2
-		result++
-	}
-
-	return result
+func init() {
+	countNumerals()
+	calculatePartialSums()
 }
 
 func decibinaryToArray(d int64) []int {
@@ -130,6 +91,7 @@ func decibinaryToArray(d int64) []int {
 	// The reallocation, if this number is 16, is expensive,
 	// whereas an allocation of 32 is cheap. Since most of
 	// inputs are large, let's just go with 32.
+
 	a := make([]int, 0, 32)
 	for ; d > 0; d /= 10 {
 		digit := int(d % 10)
@@ -139,7 +101,7 @@ func decibinaryToArray(d int64) []int {
 	return a
 }
 
-func decibinaryArrayToDecimal(d []int) int {
+func decibinaryArrayToInt(d []int) int {
 	result := 0
 	for _, digit := range d {
 		result *= 2
@@ -148,8 +110,7 @@ func decibinaryArrayToDecimal(d []int) int {
 	return result
 }
 
-// TODO This is poorly named.
-func decibinaryToBinary(d int64) int {
+func decibinaryToInt(d int64) int {
 	significance := 1
 	result := 0
 	for d > 0 {
@@ -160,43 +121,17 @@ func decibinaryToBinary(d int64) int {
 	return result
 }
 
-func lowestDecibinaryNumeral(n int) int64 {
-	result := int64(0)
-	place := int64(1)
-	// Go from lower-order to higher.
-	for n > 0 {
-		var digit int
-		if n < 10 {
-			digit = n
-		} else if n%2 == 0 {
-			digit = 8
-		} else {
-			digit = 9
-		}
-		result += int64(digit) * place
-		n -= digit
-		n /= 2
-		place *= 10
-	}
-	return result
-}
-
 func highestDecibinaryNumeral(n int) int64 {
-	result := int64(0)
 	if n == 0 {
-		return result
+		return 0
 	}
-	bit := 1 << 30
-	for n&bit == 0 {
-		bit >>= 1
-	}
-	for bit > 0 {
-		if n&bit != 0 {
-			result = result*10 + 1
-		} else {
-			result = result * 10
+	result := int64(0)
+	
+	for bit := 1 << (bits.Len(uint(n)) - 1); bit > 0; bit >>= 1 {
+		result *= 10
+		if n & bit != 0 {
+			result++
 		}
-		bit >>= 1
 	}
 	return result
 }
@@ -206,7 +141,7 @@ func countSuffixes(value int, size int) int {
 		return 1
 	}
 	count := 0
-	if value > 1 && value % 2 == 1 {
+	if value > 1 && value%2 == 1 {
 		value--
 	}
 	for s, f := range countsBySize[value] {
@@ -241,8 +176,8 @@ func locate(rank int64) int64 {
 			suffix = suffix[1:]
 			continue
 		}
-		decimalValueOfSuffix := decibinaryArrayToDecimal(suffix[1:])
-		countForSuffix := int64(countSuffixes(decimalValueOfSuffix, len(suffix) - 1))
+		decimalValueOfSuffix := decibinaryArrayToInt(suffix[1:])
+		countForSuffix := int64(countSuffixes(decimalValueOfSuffix, len(suffix)-1))
 		// If there are enough numerals with this prefix, we leave
 		// it, and just reduce the suffix further.
 		if target < countForSuffix+countForPrefix {
@@ -264,15 +199,15 @@ func locate(rank int64) int64 {
 		}
 	}
 	result = append(result, suffix[0])
-	var blah int64 = 0
+	var d int64 = 0
 	for _, digit := range result {
-		blah *= 10
-		blah += int64(digit)
+		d *= 10
+		d += int64(digit)
 	}
 
 	// Actually, we want to return a *printable* decibinary number.
 	// We could just return a string, I suppose.
-	return blah
+	return d
 }
 
 // The lower bound in the array of partial sums should be the rank of the minimal
@@ -285,9 +220,9 @@ func rankToNative(rank int64) int {
 func main() {
 
 	var lastQuery int64 = 0
-	for i := 0; i < 11; i++ {
+	for i := 0; i <= 11; i++ {
 		result := []int64{}
-		for j := lastQuery + 1; j <= lastQuery + counts[i]; j++ {
+		for j := lastQuery + 1; j <= lastQuery+counts[i]; j++ {
 			result = append(result, locate(j))
 		}
 		fmt.Printf("%d: %v\n", i, result)
@@ -295,9 +230,9 @@ func main() {
 	}
 	// Got: 5124106013121426
 	// ,,,,,5124105853195114
-	fmt.Printf("Hello: %d\n", locate(4284323577117864))
+	fmt.Printf("Hello: %d %d %d\n", locate(4284323577117864), decibinaryToInt(5124106013121426), decibinaryToInt(5124105853195114))
 
-	onlineSampleInput := []int64{ 1, 2, 3, 4, 10 }
+	onlineSampleInput := []int64{1, 2, 3, 4, 10}
 	for _, input := range onlineSampleInput {
 		fmt.Println(locate(input))
 	}

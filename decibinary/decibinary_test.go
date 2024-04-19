@@ -46,14 +46,14 @@ func FuzzRoundTripThroughArray(f *testing.F) {
 		}
 		highest := highestDecibinaryNumeral(input)
 		highestArray := decibinaryToArray(highest)
-		x := decibinaryArrayToDecimal(highestArray)
+		x := decibinaryArrayToInt(highestArray)
 		if x != input {
 			t.Errorf("Input %d has minimum decibinary numeral %d; this round-tripped as %d", input, highest, x)
 		}
 
 		lowest := lowestDecibinaryNumeral(input)
 		lowestArray := decibinaryToArray(lowest)
-		y := decibinaryArrayToDecimal(lowestArray)
+		y := decibinaryArrayToInt(lowestArray)
 		if y != input {
 			t.Errorf("Input %d has maximum decibinary numeral %d; this round-tripped as %d", input, highest, x)
 
@@ -82,13 +82,13 @@ func FuzzTranslation(f *testing.F) {
 			t.Skip()
 		}
 		highest := highestDecibinaryNumeral(input)
-		roundTrip := decibinaryToBinary(highest)
+		roundTrip := decibinaryToInt(highest)
 		if roundTrip != input {
 			t.Errorf("Input %d has maximum decibinary numeral %d; this round-tripped as %d", input, highest, roundTrip)
 		}
 
 		lowest := lowestDecibinaryNumeral(input)
-		roundTrip = decibinaryToBinary(lowest)
+		roundTrip = decibinaryToInt(lowest)
 		if roundTrip != input {
 			t.Errorf("Input %d has minimum decibinary numeral %d; this round-tripped as %d", input, lowest, roundTrip)
 		}
@@ -126,7 +126,7 @@ func TestBoundaries(t *testing.T) {
 		// This is the decibinary numeral having that rank.
 		output := outputs[i]
 		// This is its decimal representation.
-		d := decibinaryToBinary(output)
+		d := decibinaryToInt(output)
 		native := rankToNative(rank)
 		t.Logf("Decimal %d ranked between %d and %d; looking for %d", d, partialSums[native-1], partialSums[native], rank)
 		if rank > partialSums[native] || rank < partialSums[native-1] {
