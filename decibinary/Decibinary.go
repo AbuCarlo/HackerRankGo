@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math/bits"
-	"slices"
 	"sort"
 )
 
@@ -97,8 +96,21 @@ func decibinaryToArray(d int64) []int {
 		digit := int(d % 10)
 		a = append(a, digit)
 	}
-	slices.Reverse(a)
+	// We can't yet use Go 1.22
+	for i, j := 0, len(a)-1; i < j; i, j = i+1, j-1 {
+		a[i], a[j] = a[j], a[i]
+	}
+
 	return a
+}
+
+func decibinaryArrayToDecibinary(a []int) int64 {
+	var result int64
+	for _, digit := range a {
+		result *= 10
+		result += int64(digit)
+	}
+	return result
 }
 
 func decibinaryArrayToInt(d []int) int {
@@ -126,10 +138,10 @@ func highestDecibinaryNumeral(n int) int64 {
 		return 0
 	}
 	result := int64(0)
-	
+
 	for bit := 1 << (bits.Len(uint(n)) - 1); bit > 0; bit >>= 1 {
 		result *= 10
-		if n & bit != 0 {
+		if n&bit != 0 {
 			result++
 		}
 	}
@@ -157,6 +169,7 @@ func lowestDecibinaryNumeral(n int) int64 {
 	return result
 }
 
+// TODO Cache these?
 func countSuffixes(value int, size int) int {
 	if value == 0 {
 		return 1
@@ -173,62 +186,69 @@ func countSuffixes(value int, size int) int {
 	return count
 }
 
+func shiftHead(a []int) []int {
+	a[0] -= 1
+	a[1] += 2
+
+	if a[0] == 0 {
+		a = a[1:]
+	}
+
+	if a[0] < 10 {
+		return a
+	}
+
+	for i, d := range a {
+		if d > 9 {
+			a[i] -= 1
+			a[i+1] += 2
+		} else {
+			break
+		}
+	}
+
+	return a
+}
+
+func locateSized(a []int, operations int64) {
+	if operations == 0 {
+		return
+	}
+
+	if len(a) == 0 {
+		if operations != 0 {
+			panic("Expected 0")
+		}
+		return
+	}
+
+	// Do I have to roll the leading digit?
+	for true {
+		tailValue := decibinaryArrayToInt(a[1:])
+		tailVersions := countSuffixes(tailValue, len(a)-1)
+		// If enough operations are possible on the suffix,
+		// leave the highest digit in place and recurse.
+		if int(operations) < tailVersions {
+			locateSized(a[1:], operations)
+			return
+		}
+		operations -= int64(tailVersions)
+		a = shiftHead(a)
+	}
+}
+
 func locate(rank int64) int64 {
 	if rank < 1 {
 		panic("Queries are 1-based.")
 	}
-	result := make([]int, 0, 16)
-	nativeValue := rankToNative(rank)
-	// How many numerals do we want to skip over, proceeding backward
-	// from the maximum numeral for this native value?
-	target := partialSums[nativeValue] - rank
-	countForPrefix := int64(0)
-	highest := highestDecibinaryNumeral(nativeValue)
-	// These array elements go from *most* significant to least.
-	suffix := decibinaryToArray(highest)
-	for len(suffix) > 1 {
-		if suffix[0] == 0 {
-			// All the digits to the right are 1 or 0. So none
-			// of them could have been transposed leftward.
-			// Thus the current digit doesn't affect the
-			// ceiling.
-			// TODO Improve this comment.
-			result = append(result, 0)
-			suffix = suffix[1:]
-			continue
-		}
-		decimalValueOfSuffix := decibinaryArrayToInt(suffix[1:])
-		countForSuffix := int64(countSuffixes(decimalValueOfSuffix, len(suffix)-1))
-		// If there are enough numerals with this prefix, we leave
-		// it, and just reduce the suffix further.
-		if target < countForSuffix+countForPrefix {
-			result = append(result, suffix[0])
-			suffix = suffix[1:]
-			// countForPrefix += countForPrefix + countForSuffix
-		} else {
-			// Shift a value rightward. On the next iteration,
-			// the suffix will have more bits to permute.
-			suffix[0]--
-			suffix[1] += 2
-			// This step will probably be taken care of above.
-			if suffix[0] == 0 {
-				// Don't throw away a 0 in the middle of the numeral!
-				result = append(result, 0)
-				suffix = suffix[1:]
-			}
-			countForPrefix += countForSuffix
-		}
-	}
-	result = append(result, suffix[0])
-	var d int64 = 0
-	for _, digit := range result {
-		d *= 10
-		d += int64(digit)
-	}
 
-	// Actually, we want to return a *printable* decibinary number.
-	// We could just return a string, I suppose.
-	return d
+	nativeValue := rankToNative(rank)
+	array := decibinaryToArray(highestDecibinaryNumeral(nativeValue))
+	operations := partialSums[nativeValue] - rank
+
+	locateSized(array, operations)
+
+	return int64(decibinaryArrayToDecibinary(array))
 }
 
 // The lower bound in the array of partial sums should be the rank of the minimal
@@ -241,7 +261,7 @@ func rankToNative(rank int64) int {
 func main() {
 
 	var lastQuery int64 = 0
-	for i := 0; i <= 16; i++ {
+	for i := 0; i <= 20; i++ {
 		result := []int64{}
 		for j := lastQuery + 1; j <= lastQuery+counts[i]; j++ {
 			result = append(result, locate(j))
@@ -249,9 +269,8 @@ func main() {
 		fmt.Printf("%d: %v\n", i, result)
 		lastQuery += counts[i]
 	}
-	// Got: 5124106013121426
-	// ,,,,,5124105853195114
-	fmt.Printf("Hello: %d %d %d\n", locate(4284323577117864), decibinaryToInt(5124106013121426), decibinaryToInt(5124105853195114))
+
+	fmt.Printf("Input %d; actual output %d; expected %d\n", 2714, locate(2714), 755)
 
 	onlineSampleInput := []int64{1, 2, 3, 4, 10}
 	for _, input := range onlineSampleInput {
