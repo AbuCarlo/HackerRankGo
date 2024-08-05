@@ -186,30 +186,6 @@ func countSuffixes(value int, size int) int {
 	return count
 }
 
-func shiftHead(a []int) []int {
-	a[0] -= 1
-	a[1] += 2
-
-	if a[0] == 0 {
-		a = a[1:]
-	}
-
-	if a[0] < 10 {
-		return a
-	}
-
-	for i, d := range a {
-		if d > 9 {
-			a[i] -= 1
-			a[i+1] += 2
-		} else {
-			break
-		}
-	}
-
-	return a
-}
-
 func locateSized(a []int, operations int64) {
 	if operations == 0 {
 		return
@@ -223,7 +199,7 @@ func locateSized(a []int, operations int64) {
 	}
 
 	// Do I have to roll the leading digit?
-	for true {
+	for {
 		tailValue := decibinaryArrayToInt(a[1:])
 		tailVersions := countSuffixes(tailValue, len(a)-1)
 		// If enough operations are possible on the suffix,
@@ -232,8 +208,23 @@ func locateSized(a []int, operations int64) {
 			locateSized(a[1:], operations)
 			return
 		}
+
+		// TODO Explain this.
 		operations -= int64(tailVersions)
-		a = shiftHead(a)
+		a[0] -= 1
+		a[1] += 2
+	
+		if a[0] == 0 {
+			a = a[1:]
+		}
+	
+		for i, d := range a {
+			if d > 9 {
+				// d could be 11 or 10.
+				a[i] -= d - 9
+				a[i+1] += 2 * (d - 9)
+			}
+		}
 	}
 }
 
@@ -260,20 +251,18 @@ func rankToNative(rank int64) int {
 
 func main() {
 
-	var lastQuery int64 = 0
-	for i := 0; i <= 20; i++ {
+	for i := 43; i <= 43; i++ {
+		first := partialSums[i] - counts[i] + 1
 		result := []int64{}
-		for j := lastQuery + 1; j <= lastQuery+counts[i]; j++ {
-			result = append(result, locate(j))
+		for j := first; j <= partialSums[i]; j++ {
+			d := locate(j)
+			result = append(result, d)
+			if i != decibinaryToInt(d) {
+				fmt.Printf("Decimal value %d as decibinary %d fails round-trip: %d\n", i, d, decibinaryToInt(d))
+			}
 		}
 		fmt.Printf("%d: %v\n", i, result)
-		lastQuery += counts[i]
 	}
 
 	fmt.Printf("Input %d; actual output %d; expected %d\n", 2714, locate(2714), 755)
-
-	onlineSampleInput := []int64{1, 2, 3, 4, 10}
-	for _, input := range onlineSampleInput {
-		fmt.Println(locate(input))
-	}
 }

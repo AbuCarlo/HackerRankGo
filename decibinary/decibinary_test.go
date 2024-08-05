@@ -89,8 +89,12 @@ func FuzzTranslation(f *testing.F) {
 	})
 }
 
-func TestBoundaries(t *testing.T) {
-	inputFile, err := os.Open("input03.txt")
+func readTestFiles(t *testing.T, n int) ([]int64, []int64) {
+	inputFileName := fmt.Sprintf("test-files/input%02d.txt", n)
+	outputFileName := fmt.Sprintf("test-files/output%02d.txt", n)
+
+	t.Logf("Opening %s", inputFileName)
+	inputFile, err := os.Open(inputFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +108,7 @@ func TestBoundaries(t *testing.T) {
 		t.Fatalf("Expected %d inputs; got %d", size, len(inputs))
 	}
 
-	outputFile, err := os.Open("output03.txt")
+	outputFile, err := os.Open(outputFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,23 +118,34 @@ func TestBoundaries(t *testing.T) {
 		t.Fatalf("Expected %d outputs; got %d", size, len(outputs))
 	}
 
-	for i := 0; i < int(size); i++ {
-		// This is the rank of a decibinary number: the "query".
-		rank := inputs[i]
-		// This is the decibinary numeral having that rank.
-		expected := outputs[i]
-		// This is its decimal representation.
-		d := decibinaryToInt(expected)
-		native := rankToNative(rank)
+	return inputs, outputs
+}
 
-		if d != native {
-			t.Errorf("Expected output %d does not match actual native integer %d at rank %d", expected, native, rank)
-		}
+func TestBoundaries(t *testing.T) {
 
-		actual := locate(rank)
-		if actual != expected {
-			t.Errorf("Expected output %d does not match actual output %d", expected, actual)
+	testFileNumbers := []int{ 3, 7 }
 
+	for _, n := range testFileNumbers {
+
+		inputs, outputs := readTestFiles(t, n)
+
+		for i, rank := range inputs {
+			// This is the rank of a decibinary number: the "query".
+			// This is the decibinary numeral having that rank.
+			expected := outputs[i]
+			// This is its decimal representation.
+			d := decibinaryToInt(expected)
+			native := rankToNative(rank)
+	
+			if d != native {
+				t.Errorf("Expected %d-th output %d does not match actual native integer %d at rank %d", i, expected, native, rank)
+			}
+	
+			actual := locate(rank)
+			if actual != expected {
+				t.Errorf("Expected %d-th output %d does not match actual output %d for input %d", i, expected, actual, rank)
+	
+			}
 		}
 	}
 }
