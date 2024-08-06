@@ -27,7 +27,7 @@ func maxXorArray(a []int32) int32 {
 		mask |= bit
 
 		set := map[int32]bool{}
-        // Find all possible prefixes with respect the the current mask.
+        // Find all possible prefixes with respect to the current mask.
 		for _, num := range a {
 			left := num & mask
 			set[left] = true
@@ -39,6 +39,9 @@ func maxXorArray(a []int32) int32 {
 		greed := max | bit
 
 		for prefix := range set {
+            // This is the crucial step: 
+            // greed ^ prefix *also* has
+            // to be an available prefix.
 			if set[greed^prefix] {
 				max = greed
 				break
