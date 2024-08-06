@@ -1,25 +1,32 @@
 package miscellaneous
 
 import (
-	"reflect"
+	"math/bits"
 	"slices"
 	"testing"
 
 	"golang.org/x/exp/constraints"
 )
 
-func maxXorArray[N constraints.Integer](a []N) N {
-	max := N(0)
-	mask := N(0)
+func maxXorArray(a []int32) int32 {
+	max := int32(0)
+	mask := int32(0)
 
-	sizeOfN := reflect.TypeOf(N(0)).Bits()
+    startPosition := 0
+    for _, n := range a {
+        highestOneBit := 31 - bits.LeadingZeros32(uint32(n))
+        if highestOneBit > startPosition {
+            startPosition = highestOneBit
+        }
+    }
+
     // Start with the highest-order bit, and end with 0b1.
-	for position := sizeOfN - 1; position >= 0; position -= 1 {
-		bit := N(1) << position
+	for position := startPosition; position >= 0; position -= 1 {
+		bit := int32(1 << position)
         // Add the next-highest-order bit to the mask.
 		mask |= bit
 
-		set := map[N]bool{}
+		set := map[int32]bool{}
         // Find all possible prefixes with respect the the current mask.
 		for _, num := range a {
 			left := num & mask
@@ -43,7 +50,7 @@ func maxXorArray[N constraints.Integer](a []N) N {
 
 func TestMaxXorArray(t *testing.T) {
 	// https://stackoverflow.com/a/66822115/476942
-	sample := []int{3, 10, 5, 25, 2, 8}
+	sample := []int32{3, 10, 5, 25, 2, 8}
 	actual := maxXorArray(sample)
 	if actual != 28 {
 		t.Errorf("Expected %d for %v; actual %v", 28, sample, actual)
