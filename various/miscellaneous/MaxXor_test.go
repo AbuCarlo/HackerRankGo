@@ -41,7 +41,10 @@ func maxXorArray(a []int32) int32 {
 		for prefix := range set {
             // This is the crucial step: 
             // greed ^ prefix *also* has
-            // to be an available prefix.
+            // to be an available prefix,
+            // i.e. there are two values
+            // with different prefixes
+            // whose XOR gives us a new maximum.
 			if set[greed^prefix] {
 				max = greed
 				break
