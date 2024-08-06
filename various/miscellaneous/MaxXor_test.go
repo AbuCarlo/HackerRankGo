@@ -1,13 +1,16 @@
 package miscellaneous
 
 import (
-    "testing"
+	"slices"
+	"testing"
+
+	"golang.org/x/exp/constraints"
 )
 
-func maxXor(arr []int32, queries []int32) []int32 {
-    result := make([]int32, len(queries))
+func maxXor[N constraints.Integer](arr []N, queries []N) []N {
+    result := make([]N, len(queries))
     for i, q := range queries {
-        result[i] = 0
+        result[i] = N(0)
         for _, a := range arr {
             x := q ^ a
             if x > result[i] {
@@ -20,15 +23,34 @@ func maxXor(arr []int32, queries []int32) []int32 {
 }
 
 func TestSamples(t *testing.T) {
-	arr00 := []int32{ 0, 1, 2 }
-    queries00 := []int32{ 3, 7, 2 }
-    result00 := maxXor(arr00, queries00)
+    tests := []struct {
+        arr []int
+        queries []int
+        expected []int
+    }{
+        {
+            []int{ 0, 1, 2 },
+            []int{3, 7, 2},
+            []int{ 3, 7, 3 },
+        },
+        {
+            []int{ 5, 1, 7, 4, 3 },
+            []int{2, 0},
+            []int{ 7, 7 }, 
+        },
+        {
+            []int{1, 3, 5, 7 },
+            []int{17, 6},
+            []int{22, 7 },
+        },
+    }
 
-    t.Logf("Result #02: %v", result00)
-
-    arr02 := []int32{ 1, 3, 5, 7 }
-    queries02 := []int32{ 17, 6 }
-    result02 := maxXor(arr02, queries02)
-
-    t.Logf("Result #02: %v", result02)
+    for i, test := range tests {
+        actual := maxXor(test.arr, test.queries)
+        if !slices.Equal(actual, test.expected) {
+            t.Errorf("Test # %d expected %v; actual %v", i, test.expected, actual)
+        } else {
+            t.Logf("Result %02d: %v", i, actual)
+        }
+    }
 }
