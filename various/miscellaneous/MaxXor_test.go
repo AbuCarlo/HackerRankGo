@@ -65,6 +65,9 @@ func TestMaxXorArray(t *testing.T) {
 }
 
 func maxXor[N constraints.Integer](arr []N, queries []N) []N {
+	// Amazingly, the way to solve this on HackerRank is 
+	// to avoid this allocation, and write the results 
+	// into queries!
 	result := make([]N, len(queries))
 	for i, q := range queries {
 		result[i] = N(0)
