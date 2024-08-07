@@ -20,6 +20,7 @@ func FriendCircle(queries [][]int) []int {
 		}
 		// Are the nodes already friends?
 		if _, ok := friends[left][right]; ok {
+			// The current friend group's size hasn't changed.
 			result[i] = max
 			continue
 		}
