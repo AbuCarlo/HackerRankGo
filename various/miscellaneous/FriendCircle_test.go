@@ -1,6 +1,11 @@
 package miscellaneous
 
 import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -41,6 +46,42 @@ func FriendCircle(queries [][]int) []int {
 		result[i] = max
 	}
 	return result
+}
+
+func readEdges(f *os.File) [][]int {
+	scanner := bufio.NewScanner(f)
+	scanner.Scan()
+	size, _ := strconv.Atoi(scanner.Text())
+	edges := make([][]int, 0, size)
+	for scanner.Scan() {
+		edge := strings.Split(scanner.Text(), " ")
+		right, _ := strconv.Atoi(edge[0])
+		left, _ := strconv.Atoi(edge[0])
+		edges = append(edges, []int{left, right})
+	}
+
+	if len(edges) != size {
+		panic(fmt.Sprintf("Expected inputs of size %d; got %d", size, len(edges)))
+	}
+
+	return edges
+}
+
+func BenchmarkFriendCircle(b *testing.B) {
+	inputFileName := "friend-circle/input10.txt"
+	b.Logf("Opening %s", inputFileName)
+	inputFile, err := os.Open(inputFileName)
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer inputFile.Close()
+	edges := readEdges(inputFile)
+
+	b.Run("Test Case 10", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			FriendCircle(edges)
+		}
+	})
 }
 
 func TestFriendCircle(t *testing.T) {
