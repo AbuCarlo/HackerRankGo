@@ -5,35 +5,38 @@ import (
 )
 
 func FriendCircle(queries [][]int) []int {
-	friends := map[int]*map[int]bool{}
+	friendship := map[int]map[int]bool{}
 	max := 0
 	result := make([]int, len(queries))
 	for i, q := range queries {
 		// Is one of these nodes already in the map?
 		left, right := q[0], q[1]
-		// Each node is its own friend.
-		if _, ok := friends[left]; !ok {
-			friends[left] = &map[int]bool{ left: true }
+		if _, l := friendship[left]; !l {
+			// left is new.
+			if friends, r := friendship[right]; r {
+				// Add it to an existing friend group.
+				friendship[left] = friends
+				friendship[left][left] = true
+			} else {
+				friendship[left] = map[int]bool{left: true, right: true}
+				friendship[right] = friendship[left]
+			}
+		} else if _, r := friendship[right]; !r {
+			// right is new; add it to left's friends.
+			friendship[left][right] = true
+			friendship[right] = friendship[left]
+		} else {
+			// Copy right's friends to left.
+			for friend := range friendship[right] {
+				(friendship[left])[friend] = true
+			}
+			// Every friend shares the same map.
+			for friend := range friendship[left] {
+				friendship[friend] = friendship[left]
+			}
 		}
-		if _, ok := friends[right]; !ok {
-			friends[right] = &map[int]bool{ right: true }
-		}
-		// Are the nodes already friends?
-		if _, ok := (*friends[left])[right]; ok {
-			// The current friend group's size hasn't changed.
-			result[i] = max
-			continue
-		}
-		// Copy right's friends to left.
-		for friend := range *friends[right] {
-			(*friends[left])[friend] = true
-		}
-		// Every friend shares the same map.
-		for friend := range *friends[left] {
-			friends[friend] = friends[left]
-		}
-		if len(*friends[left]) > max {
-			max = len(*friends[left])
+		if len(friendship[left]) > max {
+			max = len(friendship[left])
 		}
 		result[i] = max
 	}
