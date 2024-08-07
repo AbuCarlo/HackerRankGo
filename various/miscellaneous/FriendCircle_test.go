@@ -17,19 +17,18 @@ func FriendCircle(queries [][]int) []int {
 	for i, q := range queries {
 		// Is one of these nodes already in the map?
 		left, right := q[0], q[1]
+		// Map length is stored, so this is cheap.
+		if len(friendship[left]) < len(friendship[right]) {
+			left, right = right, left
+		}
+		// If left is new, right must also be new.
 		if _, l := friendship[left]; !l {
-			// left is new.
-			if friends, r := friendship[right]; r {
-				// Add it to an existing friend group.
-				friendship[left] = friends
-				friendship[left][left] = true
-			} else {
-				m := make(map[int]bool, 32)
-				m[left] = true
-				m[right] = true
-				friendship[left] = m
-				friendship[right] = friendship[left]
-			}
+			// This turns out to be more efficient, since most of these
+			// maps are combined into larger ones. Allocating larger
+			// ones turns out to waste time.
+			m := map[int]bool{ left: true, right: true}
+			friendship[left] = m
+ 			friendship[right] = m
 		} else if _, r := friendship[right]; !r {
 			// right is new; add it to left's friends.
 			friendship[left][right] = true
@@ -37,7 +36,7 @@ func FriendCircle(queries [][]int) []int {
 		} else {
 			// Copy right's friends to left.
 			for friend := range friendship[right] {
-				(friendship[left])[friend] = true
+				friendship[left][friend] = true
 			}
 			// Every friend shares the same map.
 			for friend := range friendship[left] {
