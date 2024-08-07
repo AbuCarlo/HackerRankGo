@@ -5,9 +5,9 @@ import (
 )
 
 func flippingBits(n int64) int64 {
-	u := uint64(n)
-	u = -u - 1
-	return int64(u)
+	v := uint64(n)
+	u := ^v
+	return int64(-u)
 }
 
 func TestFlippingBits(t *testing.T) {
@@ -16,7 +16,7 @@ func TestFlippingBits(t *testing.T) {
 
 	for i, n := range inputs {
 		if actual := flippingBits(n); actual != expected[i] {
-			t.Errorf("Test case %d, %d: expected %d, actual %d", i, n, expected[i], actual)
+			t.Errorf("Test case %d: input %d (%d) expected %016x, actual %016x", i, n, n, expected[i], actual)
 		}
 	}
 }
