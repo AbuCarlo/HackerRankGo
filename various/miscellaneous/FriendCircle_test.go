@@ -10,7 +10,7 @@ import (
 )
 
 func FriendCircle(queries [][]int) []int {
-	friendship := map[int]map[int]bool{}
+	friendship := map[int][]int{}
 	max := 0
 	result := make([]int, len(queries))
 	for i, q := range queries {
@@ -18,25 +18,26 @@ func FriendCircle(queries [][]int) []int {
 		left, right := q[0], q[1]
 		if _, l := friendship[left]; !l {
 			// left is new.
-			if friends, r := friendship[right]; r {
+			if _, r := friendship[right]; r {
 				// Add it to an existing friend group.
-				friendship[left] = friends
-				friendship[left][left] = true
+				friendship[left] = append(friendship[right], left)
+				for _, friend := range friendship[left] {
+					friendship[friend] = friendship[left]
+				}
 			} else {
-				friendship[left] = map[int]bool{left: true, right: true}
-				friendship[right] = friendship[left]
+				friendship[right] = []int{ left, right }
+				friendship[left] = friendship[right]
 			}
 		} else if _, r := friendship[right]; !r {
 			// right is new; add it to left's friends.
-			friendship[left][right] = true
-			friendship[right] = friendship[left]
-		} else {
-			// Copy right's friends to left.
-			for friend := range friendship[right] {
-				(friendship[left])[friend] = true
+			friendship[left] = append(friendship[left], right)
+			for _, friend := range friendship[left] {
+				friendship[friend] = friendship[left]
 			}
+		} else {
+			friendship[left] = append(friendship[left], friendship[right]...)
 			// Every friend shares the same map.
-			for friend := range friendship[left] {
+			for _, friend := range friendship[left] {
 				friendship[friend] = friendship[left]
 			}
 		}
