@@ -11,20 +11,23 @@ func FriendCircle(queries [][]int) []int {
 	for i, q := range queries {
 		// Is one of these nodes already in the map?
 		left, right := q[0], q[1]
+		// Each node is its own friend.
 		if _, ok := friends[left]; !ok {
 			friends[left] = map[int]bool{ left: true }
 		}
 		if _, ok := friends[right]; !ok {
 			friends[right] = map[int]bool{ right: true }
 		}
-		// It's possible that the two nodes are already friends.
+		// Are the nodes already friends?
 		if _, ok := friends[left][right]; ok {
 			result[i] = max
 			continue
 		}
+		// Copy right's friends to left.
 		for friend := range friends[right] {
 			friends[left][friend] = true
 		}
+		// Every friend shares the same map.
 		for friend := range friends[left] {
 			friends[friend] = friends[left]
 		}
