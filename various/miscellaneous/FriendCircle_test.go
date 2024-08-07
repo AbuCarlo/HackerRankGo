@@ -11,23 +11,22 @@ func FriendCircle(queries [][]int) []int {
 	for i, q := range queries {
 		// Is one of these nodes already in the map?
 		left, right := q[0], q[1]
-		_, ok := friends[left]
-		if !ok {
-			friends[left] = []int{left}
+		if _, ok := friends[left]; !ok {
+			friends[left] = map[int]bool{ left: true }
 		}
-		_, ok = friends[right]
-		if !ok {
-			friends[right] = []int{right}
+		if _, ok := friends[right]; !ok {
+			friends[right] = map[int]bool{ right: true }
 		}
-		// If left and right are already friends, they
-		// point to equivalent slices. We can't check
-		// reference equality in Go: a slice is a value 
-		// object.
-		friends[left] = append(friends[left], friends[right]...)
-		for _, friend := range friends[left] {
-			if friend != left {
-				friends[friend] = friends[left]
-			}
+		// It's possible that the two nodes are already friends.
+		if _, ok := friends[left][right]; ok {
+			result[i] = max
+			continue
+		}
+		for friend := range friends[right] {
+			friends[left][friend] = true
+		}
+		for friend := range friends[left] {
+			friends[friend] = friends[left]
 		}
 		if len(friends[left]) > max {
 			max = len(friends[left])
@@ -70,5 +69,4 @@ func TestFriendCircle(t *testing.T) {
 	output02 := FriendCircle(input02)
 
 	t.Logf("%v", output02)
-
 }
