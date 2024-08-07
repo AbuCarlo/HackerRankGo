@@ -5,9 +5,8 @@ import (
 )
 
 func flippingBits(n int64) int64 {
-	v := uint64(n)
-	u := ^v
-	return int64(-u)
+	low := uint32(n)
+	return int64(^low)
 }
 
 func TestFlippingBits(t *testing.T) {
