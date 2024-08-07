@@ -10,16 +10,14 @@ func FriendCircle(queries [][]int) []int {
 	result := make([]int, len(queries))
 	for i, q := range queries {
 		left, right := q[0], q[1]
-		_, ok := friends[left]
-		if !ok {
+		if _, ok := friends[left]; !ok {
 			friends[left] = map[int]bool{ left: true }
 		}
-		_, ok = friends[right]
-		if !ok {
+		if _, ok := friends[right]; !ok {
 			friends[right] = map[int]bool{ right: true }
 		}
 		// It's possible that the two nodes are already friends.
-		if _, ok = friends[left][right]; ok {
+		if _, ok := friends[left][right]; ok {
 			result[i] = max
 			continue
 		}
