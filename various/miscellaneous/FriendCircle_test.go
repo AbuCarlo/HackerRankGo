@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -88,36 +89,48 @@ func BenchmarkFriendCircle(b *testing.B) {
 }
 
 func TestFriendCircle(t *testing.T) {
-	input00 := [][]int{
-		{1, 2},
-		{1, 3},
+
+	type Table struct {
+		input    [][]int
+		expected []int
+	}
+	table := []Table{
+		{
+			[][]int{
+				{1, 2},
+				{1, 3},
+			},
+			[]int{2, 3},
+		},
+		{
+			[][]int{
+				{1, 2},
+				{3, 4},
+				{2, 3},
+			},
+			[]int{2, 2, 4},
+		},
+		{
+			[][]int{
+				{6, 4},
+				{5, 9},
+				{8, 5},
+				{4, 1},
+				{1, 5},
+				{7, 2},
+				{4, 2},
+				{7, 6},
+			},
+			[]int{2, 2, 3, 3, 6, 6, 8, 8},
+		},
 	}
 
-	output00 := FriendCircle(input00)
-	t.Logf("%v", output00)
-
-	input := [][]int{
-		{1, 2},
-		{3, 4},
-		{2, 3},
+	for i, row := range table {
+		output := FriendCircle(row.input)
+		if !slices.Equal(output, row.expected) {
+			t.Errorf("Test %d expected %v, got %v", i, row.expected, output)
+		} else {
+			t.Logf("Test %d returns %v", i, output)
+		}
 	}
-
-	output := FriendCircle(input)
-
-	t.Logf("%v", output)
-
-	input02 := [][]int{
-		{6, 4},
-		{5, 9},
-		{8, 5},
-		{4, 1},
-		{1, 5},
-		{7, 2},
-		{4, 2},
-		{7, 6},
-	}
-
-	output02 := FriendCircle(input02)
-
-	t.Logf("%v", output02)
 }
