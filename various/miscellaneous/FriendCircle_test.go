@@ -5,7 +5,7 @@ import (
 )
 
 func FriendCircle(queries [][]int) []int {
-	friends := map[int][]int{}
+	friends := map[int]map[int]bool{}
 	max := 0
 	result := make([]int, len(queries))
 	for i, q := range queries {
