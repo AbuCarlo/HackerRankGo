@@ -25,7 +25,8 @@ func FriendCircle(queries [][]int) []int {
 					friendship[friend] = friendship[left]
 				}
 			} else {
-				friendship[right] = []int{ left, right }
+				s := make([]int, 0, 32)
+				friendship[right] = append(s, left, right)
 				friendship[left] = friendship[right]
 			}
 		} else if _, r := friendship[right]; !r {
