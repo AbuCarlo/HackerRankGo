@@ -18,14 +18,19 @@ func FriendCircle(queries [][]int) []int {
 		if !ok {
 			friends[right] = map[int]bool{ right: true }
 		}
-		for friend := range friends[left] {
-			friends[right][friend] = true
+		// It's possible that the two nodes are already friends.
+		if _, ok = friends[left][right]; ok {
+			result[i] = max
+			continue
 		}
 		for friend := range friends[right] {
-			friends[friend] = friends[right]
+			friends[left][friend] = true
 		}
-		if len(friends[right]) > max {
-			max = len(friends[right])
+		for friend := range friends[left] {
+			friends[friend] = friends[left]
+		}
+		if len(friends[left]) > max {
+			max = len(friends[left])
 		}
 		result[i] = max
 	}
@@ -33,6 +38,14 @@ func FriendCircle(queries [][]int) []int {
 }
 
 func TestFriendCircle(t *testing.T) {
+	input00 := [][]int{
+		{1, 2},
+		{1, 3},
+	}
+
+	output00 := FriendCircle(input00)
+	t.Logf("%v", output00)
+
 	input := [][]int{
 		{1, 2},
 		{3, 4},
@@ -42,4 +55,19 @@ func TestFriendCircle(t *testing.T) {
 	output := FriendCircle(input)
 
 	t.Logf("%v", output)
+
+	input02 := [][]int{
+		{6, 4},
+		{5, 9},
+		{8, 5},
+		{4, 1},
+		{1, 5},
+		{7, 2},
+		{4, 2},
+		{7, 6},
+	}
+
+	output02 := FriendCircle(input02)
+
+	t.Logf("%v", output02)
 }
