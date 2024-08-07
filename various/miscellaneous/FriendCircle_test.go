@@ -10,7 +10,7 @@ import (
 )
 
 func FriendCircle(queries [][]int) []int {
-	friendship := map[int][]int{}
+	friendship := map[int]*[]int{}
 	max := 0
 	result := make([]int, len(queries))
 	for i, q := range queries {
@@ -20,30 +20,32 @@ func FriendCircle(queries [][]int) []int {
 			// left is new.
 			if _, r := friendship[right]; r {
 				// Add it to an existing friend group.
-				friendship[left] = append(friendship[right], left)
-				for _, friend := range friendship[left] {
-					friendship[friend] = friendship[left]
+				s := append(*friendship[right], left)
+				for _, friend := range s {
+					friendship[friend] = &s
 				}
 			} else {
 				s := make([]int, 0, 32)
-				friendship[right] = append(s, left, right)
+				s = append(s, left, right)
+				friendship[right] = &s
 				friendship[left] = friendship[right]
 			}
 		} else if _, r := friendship[right]; !r {
 			// right is new; add it to left's friends.
-			friendship[left] = append(friendship[left], right)
-			for _, friend := range friendship[left] {
-				friendship[friend] = friendship[left]
+			s := append(*friendship[left], right)
+			for _, friend := range s {
+				friendship[friend] = &s
 			}
-		} else {
-			friendship[left] = append(friendship[left], friendship[right]...)
+		} else if friendship[left] != friendship[right] {
+
+			s := append(*friendship[left], *friendship[right]...)
 			// Every friend shares the same map.
-			for _, friend := range friendship[left] {
-				friendship[friend] = friendship[left]
+			for _, friend := range s {
+				friendship[friend] = &s
 			}
 		}
-		if len(friendship[left]) > max {
-			max = len(friendship[left])
+		if len(*friendship[left]) > max {
+			max = len(*friendship[left])
 		}
 		result[i] = max
 	}
@@ -87,36 +89,44 @@ func BenchmarkFriendCircle(b *testing.B) {
 }
 
 func TestFriendCircle(t *testing.T) {
-	input00 := [][]int{
-		{1, 2},
-		{1, 3},
+
+	type Table struct { 
+		input [][]int;
+		expected []int
+	}
+	table := []Table{
+		{
+			[][]int{
+				{1, 2},
+				{1, 3},
+			},
+			[]int{},
+		},
+		{
+			[][]int{
+				{1, 2},
+				{3, 4},
+				{2, 3},
+			},
+			[]int{},
+		},
+		{
+			[][]int{
+				{6, 4},
+				{5, 9},
+				{8, 5},
+				{4, 1},
+				{1, 5},
+				{7, 2},
+				{4, 2},
+				{7, 6},
+			},
+			[]int{},		
+		},
 	}
 
-	output00 := FriendCircle(input00)
-	t.Logf("%v", output00)
-
-	input := [][]int{
-		{1, 2},
-		{3, 4},
-		{2, 3},
+	for i, row := range table {
+		output := FriendCircle(row.input)
+		t.Logf("Test %d returns %v", i, output)
 	}
-
-	output := FriendCircle(input)
-
-	t.Logf("%v", output)
-
-	input02 := [][]int{
-		{6, 4},
-		{5, 9},
-		{8, 5},
-		{4, 1},
-		{1, 5},
-		{7, 2},
-		{4, 2},
-		{7, 6},
-	}
-
-	output02 := FriendCircle(input02)
-
-	t.Logf("%v", output02)
 }
