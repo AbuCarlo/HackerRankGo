@@ -4,16 +4,24 @@ import "testing"
 
 type Word struct {
 	word        string
-	horizontal  bool
+	across  bool
 	row, column int
 }
 
+type Crossword struct {
+	words []Word
+}
+
+func (xword *Crossword) String() string {
+	return "";
+}
+
 func (w *Word) collides(x *Word) bool {
-	if w.horizontal != x.horizontal {
+	if w.across != x.across {
 		return false
 	}
 
-	if w.horizontal {
+	if w.across {
 
 		if w.row != x.row {
 			return false
@@ -34,6 +42,57 @@ func (w *Word) collides(x *Word) bool {
 		return w.row+len(w.word) >= x.row
 	} else {
 		return x.row+len(x.word) >= w.row
+	}
+}
+
+func (w *Word) crosses(x *Word) bool {
+	if w.across == x.across {
+		return false;
+	}
+
+	if !w.across {
+		return x.crosses(w)
+	}
+
+	for c := w.column; c < w.column + len(w.word); c++ {
+		for r := x.row; r < x.row + len(x.word); r++ {
+			if w.word[c] == x.word[r] {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+func (w *Word) findCrossings(s string) []*Word {
+	var crossings []*Word
+	if w.across {
+		// Pretend that w starts at (0, 0)
+		for c := 0; c < len(w.word); c++ {
+			for r := -len(s) + 1; r < 1; r++ {
+				if w.word[c] == s[r + len(s) - 1] {
+					crossings = append(crossings, &Word{s, false, r + w.row, c + w.column})
+				}
+			}
+		}
+	}
+
+	return crossings;
+}
+
+func TestCrossings(t *testing.T) {
+	// For any word with no repeated letters, 
+	// the number of crossings must equal the
+	// number of letters.
+	word := Word{"ALIEN", true, 0, 0}
+	crossings := word.findCrossings("ALIEN")
+	t.Logf("Found %v", crossings)
+
+
+	badWord := Word{"SYRINX", true, 0, 0}
+	noCrossings := badWord.findCrossings("MOPE")
+	if len(noCrossings) > 0 {
+		t.Error("Should be 0")
 	}
 }
 
