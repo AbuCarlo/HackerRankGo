@@ -67,11 +67,22 @@ func (w *Word) crosses(x *Word) bool {
 func (w *Word) findCrossings(s string) []*Word {
 	var crossings []*Word
 	if w.across {
-		// Pretend that w starts at (0, 0)
+		// Pretend that w starts at (0, 0). The math is easier.
 		for c := 0; c < len(w.word); c++ {
 			for r := -len(s) + 1; r < 1; r++ {
 				if w.word[c] == s[r + len(s) - 1] {
+					// Now displace the second word.
 					crossings = append(crossings, &Word{s, false, r + w.row, c + w.column})
+				}
+			}
+		}
+	} else {
+		// Pretend that w starts at (0, 0)
+		for r := 0; r < len(w.word); r++ {
+			for c := -len(s) + 1; c < 1; c++ {
+				if w.word[r] == s[c + len(s) - 1] {
+					// TODO: Add tests for this.
+					crossings = append(crossings, &Word{s, true, c + w.column, r + w.row})
 				}
 			}
 		}
