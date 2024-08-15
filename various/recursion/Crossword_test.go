@@ -1,6 +1,13 @@
 package recursion
 
-import "testing"
+import (
+	"math"
+	"strings"
+	"testing"
+)
+
+const Boundary = 10
+const FillCharacter = '-'
 
 type Word struct {
 	word        string
@@ -13,9 +20,42 @@ type Crossword struct {
 }
 
 func (xword *Crossword) String() string {
-	return "";
+	grid := populateGrid()
+
+	upperLeft, _ := xword.findBoundaries()
+
+	for _, word := range xword.words {
+		for j, c := range word.word {
+			if word.across {
+				grid[word.row - upperLeft.row][word.column - upperLeft.column + j] = c
+			} else {
+				grid[word.row - upperLeft.row + j][word.column - upperLeft.column] = c
+			}
+		}
+	}
+
+	result := make([]string, 10)
+	for i := 0; i < len(grid); i++ {
+		result[i] = string(grid[i])
+	}	
+	return strings.Join(result, "\n")
 }
 
+func populateGrid() [][]rune {
+	template := make([]rune, Boundary);
+	for i, _ := range template {
+		template[i] = FillCharacter;
+	}
+	rows := [][]rune{}
+	for i := 0; i < Boundary; i++ {
+		row := make([]rune, len(template))
+		copy(row, template)
+		rows = append(rows, row)
+	}
+	return rows;
+}
+
+// TODO: Need to check both directions! 
 func (w *Word) collides(x *Word) bool {
 	if w.across != x.across {
 		return false
@@ -45,26 +85,37 @@ func (w *Word) collides(x *Word) bool {
 	}
 }
 
-func (w *Word) crosses(x *Word) bool {
-	if w.across == x.across {
-		return false;
-	}
+type Coordinate struct {
+	row, column int;
+}
 
-	if !w.across {
-		return x.crosses(w)
-	}
+func (xw *Crossword) findBoundaries() (Coordinate,Coordinate) {
+	// COMPLAINT: No map/filter/reduce?
+	firstRow := math.MaxInt;
+	lastRow := math.MinInt;
+	firstColumn := math.MaxInt;
+	lastColumn := math.MinInt;
 
-	for c := w.column; c < w.column + len(w.word); c++ {
-		for r := x.row; r < x.row + len(x.word); r++ {
-			if w.word[c] == x.word[r] {
-				return true;
-			}
+	for _, w := range xw.words {
+		firstRow = min(firstRow, w.row)
+		if w.across {
+			lastRow = max(lastRow, w.row + len(w.word) - 1)
+		} else {
+			lastRow = max(lastRow, w.row)
+		}
+		firstColumn = min(firstColumn, w.column)
+		if w.across {
+			lastColumn = max(lastColumn, w.column)
+		} else {
+			lastColumn = max(lastColumn, w.column +  len(w.word) - 1)
 		}
 	}
-	return false;
+
+	return Coordinate{ firstRow, firstColumn }, Coordinate{ lastRow, lastColumn }
 }
 
 func (w *Word) findCrossings(s string) []*Word {
+	// TODO: Width and length cannot exceed 10.
 	var crossings []*Word
 	if w.across {
 		// Pretend that w starts at (0, 0). The math is easier.
@@ -88,7 +139,23 @@ func (w *Word) findCrossings(s string) []*Word {
 		}
 	}
 
+	// TODO Eliminate crossings that violate length/width restriction!
+
 	return crossings;
+}
+
+func TestString(t *testing.T) {
+	xword := Crossword{}
+	s := xword.String()
+	t.Logf("%s", s);
+
+	alien := Crossword{[]Word{{"ALIEN", true, 0, 0}, {"ALIEN", false, 0, 0}}}
+	s = alien.String()
+	t.Logf("%s", s)
+
+	animals := Crossword{[]Word{{"ALIEN", true, 0, 0}, {"ANIMAL", false, -1, 4}}}
+	s = animals.String()
+	t.Logf("%s", s)
 }
 
 func TestCrossings(t *testing.T) {
