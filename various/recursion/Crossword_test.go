@@ -209,11 +209,26 @@ func TestSamples(t *testing.T) {
 			},
 			strings.Split("AGRA;NORWAY;ENGLAND;GWALIOR", ";"),
 		},
+		{
+			[]string{
+				"++++++-+++",
+				"++------++",
+				"++++++-+++",
+				"++++++-+++",
+				"+++------+",
+				"++++++-+-+",
+				"++++++-+-+",
+				"++++++++-+",
+				"++++++++-+",
+				"++++++++-+",
+			},
+			strings.Split("ICELAND;MEXICO;PANAMA;ALMATY", ";"),
+		},
 	}
-	
+
 	for _, row := range table {
 		words := append([]string{}, row.words...)
-		rand.Shuffle(len(words), func(i, j int) { words[i], words[j] = words[j], words[i]})
+		rand.Shuffle(len(words), func(i, j int) { words[i], words[j] = words[j], words[i] })
 		answer := solve(row.puzzle, row.words)
 		t.Logf("%v", answer)
 	}
