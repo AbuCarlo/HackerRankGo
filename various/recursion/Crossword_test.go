@@ -7,20 +7,26 @@ import (
 )
 
 const Boundary = 10
+const Size = 10
 const FillCharacter = '-'
 
 type Word struct {
 	word        string
-	across  bool
+	across      bool
 	row, column int
+}
+
+type Slot struct {
+	across      bool
+	row, column, length int
 }
 
 type Xword []Word
 
 func populateGrid() [][]rune {
-	template := make([]rune, Boundary);
+	template := make([]rune, Boundary)
 	for i, _ := range template {
-		template[i] = FillCharacter;
+		template[i] = FillCharacter
 	}
 	rows := [][]rune{}
 	for i := 0; i < Boundary; i++ {
@@ -28,7 +34,7 @@ func populateGrid() [][]rune {
 		copy(row, template)
 		rows = append(rows, row)
 	}
-	return rows;
+	return rows
 }
 
 func (xword Xword) render() string {
@@ -39,9 +45,9 @@ func (xword Xword) render() string {
 	for _, word := range xword {
 		for j, c := range word.word {
 			if word.across {
-				grid[word.row - upperLeft.row][word.column - upperLeft.column + j] = c
+				grid[word.row-upperLeft.row][word.column-upperLeft.column+j] = c
 			} else {
-				grid[word.row - upperLeft.row + j][word.column - upperLeft.column] = c
+				grid[word.row-upperLeft.row+j][word.column-upperLeft.column] = c
 			}
 		}
 	}
@@ -49,7 +55,7 @@ func (xword Xword) render() string {
 	result := make([]string, 10)
 	for i := 0; i < len(grid); i++ {
 		result[i] = string(grid[i])
-	}	
+	}
 	return strings.Join(result, "\n")
 }
 
@@ -64,9 +70,9 @@ func overlap(w, x Word) bool {
 		}
 
 		if w.column <= x.column {
-			return w.column+len(w.word) - 1 >= x.column
+			return w.column+len(w.word)-1 >= x.column
 		} else {
-			return x.column+len(x.word) - 1 >= w.column
+			return x.column+len(x.word)-1 >= w.column
 		}
 	}
 
@@ -82,19 +88,19 @@ func overlap(w, x Word) bool {
 }
 
 type Coordinate struct {
-	row, column int;
+	row, column int
 }
 
-func findBoundaries(words []Word) (Coordinate,Coordinate) {
-	firstRow := math.MaxInt;
-	lastRow := math.MinInt;
-	firstColumn := math.MaxInt;
-	lastColumn := math.MinInt;
+func findBoundaries(words []Word) (Coordinate, Coordinate) {
+	firstRow := math.MaxInt
+	lastRow := math.MinInt
+	firstColumn := math.MaxInt
+	lastColumn := math.MinInt
 
 	for _, w := range words {
 		firstRow = min(firstRow, w.row)
 		if w.across {
-			lastRow = max(lastRow, w.row + len(w.word) - 1)
+			lastRow = max(lastRow, w.row+len(w.word)-1)
 		} else {
 			lastRow = max(lastRow, w.row)
 		}
@@ -102,11 +108,11 @@ func findBoundaries(words []Word) (Coordinate,Coordinate) {
 		if w.across {
 			lastColumn = max(lastColumn, w.column)
 		} else {
-			lastColumn = max(lastColumn, w.column +  len(w.word) - 1)
+			lastColumn = max(lastColumn, w.column+len(w.word)-1)
 		}
 	}
 
-	return Coordinate{ firstRow, firstColumn }, Coordinate{ lastRow, lastColumn }
+	return Coordinate{firstRow, firstColumn}, Coordinate{lastRow, lastColumn}
 }
 
 func abs(n int) int {
@@ -117,8 +123,8 @@ func abs(n int) int {
 }
 
 func isAlongsideHorizontal(w, x Word) bool {
-	if abs(w.row - x.row) > 1 {
-		return false;
+	if abs(w.row-x.row) > 1 {
+		return false
 	}
 	if w.column > x.column {
 		return isAlongsideHorizontal(x, w)
@@ -126,12 +132,12 @@ func isAlongsideHorizontal(w, x Word) bool {
 
 	wLast := w.column + len(w.word) - 1
 	xLast := x.column + len(x.word) - 1
-	return w.column >= x.column && w.column <= xLast || wLast >= x.column && wLast <= xLast;
+	return w.column >= x.column && w.column <= xLast || wLast >= x.column && wLast <= xLast
 }
 
 func isAlongsideVertical(w, x Word) bool {
-	if abs(w.column - x.column) > 1 {
-		return false;
+	if abs(w.column-x.column) > 1 {
+		return false
 	}
 	if w.row > x.row {
 		return isAlongsideVertical(x, w)
@@ -139,7 +145,7 @@ func isAlongsideVertical(w, x Word) bool {
 
 	wLast := w.row + len(w.word) - 1
 	xLast := x.row + len(x.word) - 1
-	return w.row >= x.row && w.row <= xLast || wLast >= x.row && wLast <= xLast;
+	return w.row >= x.row && w.row <= xLast || wLast >= x.row && wLast <= xLast
 }
 
 func isAlongside(w, x Word) bool {
@@ -158,7 +164,7 @@ func isWithinBoundaries(xword []Word, w Word) bool {
 	newXword := append(xword, w)
 
 	upperLeft, lowerRight := findBoundaries(newXword)
-	return lowerRight.column - upperLeft.column + 1 > Boundary || lowerRight.row - upperLeft.row + 1 > Boundary
+	return lowerRight.column-upperLeft.column+1 > Boundary || lowerRight.row-upperLeft.row+1 > Boundary
 }
 
 func findCrossings(w Word, s string) []Word {
@@ -167,7 +173,7 @@ func findCrossings(w Word, s string) []Word {
 		// Pretend that w starts at (0, 0). The math is easier.
 		for c := 0; c < len(w.word); c++ {
 			for r := -len(s) + 1; r < 1; r++ {
-				if w.word[c] == s[r + len(s) - 1] {
+				if w.word[c] == s[r+len(s)-1] {
 					crossings = append(crossings, Word{s, false, r + w.row, c + w.column})
 				}
 			}
@@ -176,14 +182,14 @@ func findCrossings(w Word, s string) []Word {
 		// Pretend that w starts at (0, 0)
 		for r := 0; r < len(w.word); r++ {
 			for c := -len(s) + 1; c < 1; c++ {
-				if w.word[r] == s[c + len(s) - 1] {
+				if w.word[r] == s[c+len(s)-1] {
 					crossings = append(crossings, Word{s, true, c + w.column, r + w.row})
 				}
 			}
 		}
 	}
 
-	return crossings;
+	return crossings
 }
 
 func allowed(xword []Word, word Word) bool {
@@ -209,7 +215,7 @@ func recurse(xword []Word, words []string) ([]Word, bool) {
 	}
 
 	for _, w := range words {
-		xings := findCrossings(xword[len(xword) - 1], w)
+		xings := findCrossings(xword[len(xword)-1], w)
 		for _, xing := range xings {
 			if !allowed(xword, xing) {
 				continue
@@ -226,7 +232,7 @@ func recurse(xword []Word, words []string) ([]Word, bool) {
 
 func createCrossword(words []string) []Word {
 	if len(words) == 0 {
-		return[]Word{}
+		return []Word{}
 	}
 	across := Word{words[0], true, 0, 0}
 	if xword, ok := recurse([]Word{across}, words[1:]); ok {
@@ -242,7 +248,7 @@ func createCrossword(words []string) []Word {
 func TestString(t *testing.T) {
 	xword := Xword{}
 	s := xword.render()
-	t.Logf("%s", s);
+	t.Logf("%s", s)
 
 	alien := Xword{{"ALIEN", true, 0, 0}, {"ALIEN", false, 0, 0}}
 	s = alien.render()
@@ -254,7 +260,7 @@ func TestString(t *testing.T) {
 }
 
 func TestCrossings(t *testing.T) {
-	// For any word with no repeated letters, 
+	// For any word with no repeated letters,
 	// the number of crossings must equal the
 	// number of letters.
 	word := Word{"ALIEN", true, 0, 0}
@@ -270,16 +276,16 @@ func TestCrossings(t *testing.T) {
 
 func TestCollisions(t *testing.T) {
 	type TestCase struct {
-		w Word;
-		x Word;
-		expected bool;
+		w        Word
+		x        Word
+		expected bool
 	}
 	table := []TestCase{
-		{Word{ "GWALIOR", true, 0, 0}, Word{"GWALIOR", true, 0, 0}, true },
-		{Word{ "GWALIOR", true, 0, 0}, Word{"GWALIOR", false, 0, 0}, false },
-		{Word{ "GWALIOR", true, 0, 0}, Word{"GWALIOR", true, 0, 1}, true },
-		{Word{ "GWALIOR", true, 0, 0}, Word{"GWALIOR", true, 0, 6}, true },
-		{Word{ "GWALIOR", true, 0, 0}, Word{"GWALIOR", true, 0, 7}, false },
+		{Word{"GWALIOR", true, 0, 0}, Word{"GWALIOR", true, 0, 0}, true},
+		{Word{"GWALIOR", true, 0, 0}, Word{"GWALIOR", false, 0, 0}, false},
+		{Word{"GWALIOR", true, 0, 0}, Word{"GWALIOR", true, 0, 1}, true},
+		{Word{"GWALIOR", true, 0, 0}, Word{"GWALIOR", true, 0, 6}, true},
+		{Word{"GWALIOR", true, 0, 0}, Word{"GWALIOR", true, 0, 7}, false},
 	}
 	for i, test := range table {
 		if overlap(test.w, test.x) != test.expected {
@@ -293,12 +299,73 @@ func TestCollisions(t *testing.T) {
 	}
 }
 
+func findSlots(xword []string) []Slot {
+	slots := []Slot{}
+	for row, s := range xword {
+		column := 0
+		for column < len(s) {
+			for ; column < Size && s[column] == '+'; column++ {
+				//
+			}
+			if column == Size {
+				continue
+			}
+			lastColumn := column
+			for ; lastColumn < Size && s[lastColumn] == '-'; lastColumn++ {
+				//
+			}
+			if lastColumn > column + 1 {
+				slot := Slot{true, row, column, lastColumn - column}
+				slots = append(slots, slot)
+				column = lastColumn
+			} else {
+				column++
+			}
+		}
+	}
+
+	for column := range Size {
+		row := 0
+		for row < Size {
+			for ; row < Size && xword[row][column] == '+'; row++ {
+				//
+			}
+			if row ==  Size {
+				continue
+			}
+			lastRow := row
+			for ; lastRow < Size && xword[lastRow][column] == '-'; lastRow++ {
+				//
+			}
+			if lastRow > row + 1 {
+				slot := Slot{false, row, column, lastRow - row}
+				slots = append(slots, slot)
+				row = lastRow
+			} else {
+				row++
+			}
+		}
+	}
+
+	return slots
+}
+
 func TestSamples(t *testing.T) {
 	table := [][]string{
-		{ "LONDON", "DELHI", "ICELANDA", "ANKARA"},
+		{
+			"++++++++++",
+			"+------+++",
+			"+++-++++++",
+			"+++-++++++",
+			"+++-----++",
+			"+++-++-+++",
+			"++++++-+++",
+			"++++++-+++",
+			"++++++-+++",
+			"++++++++++"},
 	}
 	for _, row := range table {
-		answer := createCrossword(row)
+		answer := findSlots(row)
 		t.Logf("%v", answer)
 	}
 }
