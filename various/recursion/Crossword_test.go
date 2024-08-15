@@ -1,6 +1,7 @@
 package recursion
 
 import (
+	"math/rand"
 	"strings"
 	"testing"
 )
@@ -209,7 +210,10 @@ func TestSamples(t *testing.T) {
 			strings.Split("AGRA;NORWAY;ENGLAND;GWALIOR", ";"),
 		},
 	}
+	
 	for _, row := range table {
+		words := append([]string{}, row.words...)
+		rand.Shuffle(len(words), func(i, j int) { words[i], words[j] = words[j], words[i]})
 		answer := solve(row.puzzle, row.words)
 		t.Logf("%v", answer)
 	}
