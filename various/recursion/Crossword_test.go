@@ -15,16 +15,28 @@ type Word struct {
 	row, column int
 }
 
-type Crossword struct {
-	words []Word
+type Xword []Word
+
+func populateGrid() [][]rune {
+	template := make([]rune, Boundary);
+	for i, _ := range template {
+		template[i] = FillCharacter;
+	}
+	rows := [][]rune{}
+	for i := 0; i < Boundary; i++ {
+		row := make([]rune, len(template))
+		copy(row, template)
+		rows = append(rows, row)
+	}
+	return rows;
 }
 
-func (xword *Crossword) String() string {
+func (xword Xword) render() string {
 	grid := populateGrid()
 
-	upperLeft, _ := xword.findBoundaries()
+	upperLeft, _ := findBoundaries(xword)
 
-	for _, word := range xword.words {
+	for _, word := range xword {
 		for j, c := range word.word {
 			if word.across {
 				grid[word.row - upperLeft.row][word.column - upperLeft.column + j] = c
@@ -41,28 +53,12 @@ func (xword *Crossword) String() string {
 	return strings.Join(result, "\n")
 }
 
-func populateGrid() [][]rune {
-	template := make([]rune, Boundary);
-	for i, _ := range template {
-		template[i] = FillCharacter;
-	}
-	rows := [][]rune{}
-	for i := 0; i < Boundary; i++ {
-		row := make([]rune, len(template))
-		copy(row, template)
-		rows = append(rows, row)
-	}
-	return rows;
-}
-
-// TODO: Need to check both directions! 
-func (w *Word) collides(x *Word) bool {
+func overlap(w, x Word) bool {
 	if w.across != x.across {
 		return false
 	}
 
 	if w.across {
-
 		if w.row != x.row {
 			return false
 		}
@@ -89,14 +85,13 @@ type Coordinate struct {
 	row, column int;
 }
 
-func (xw *Crossword) findBoundaries() (Coordinate,Coordinate) {
-	// COMPLAINT: No map/filter/reduce?
+func findBoundaries(words []Word) (Coordinate,Coordinate) {
 	firstRow := math.MaxInt;
 	lastRow := math.MinInt;
 	firstColumn := math.MaxInt;
 	lastColumn := math.MinInt;
 
-	for _, w := range xw.words {
+	for _, w := range words {
 		firstRow = min(firstRow, w.row)
 		if w.across {
 			lastRow = max(lastRow, w.row + len(w.word) - 1)
@@ -114,16 +109,66 @@ func (xw *Crossword) findBoundaries() (Coordinate,Coordinate) {
 	return Coordinate{ firstRow, firstColumn }, Coordinate{ lastRow, lastColumn }
 }
 
-func (w *Word) findCrossings(s string) []*Word {
-	// TODO: Width and length cannot exceed 10.
-	var crossings []*Word
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
+func isAlongsideHorizontal(w, x Word) bool {
+	if abs(w.row - x.row) > 1 {
+		return false;
+	}
+	if w.column > x.column {
+		return isAlongsideHorizontal(x, w)
+	}
+
+	wLast := w.column + len(w.word) - 1
+	xLast := x.column + len(x.word) - 1
+	return w.column >= x.column && w.column <= xLast || wLast >= x.column && wLast <= xLast;
+}
+
+func isAlongsideVertical(w, x Word) bool {
+	if abs(w.column - x.column) > 1 {
+		return false;
+	}
+	if w.row > x.row {
+		return isAlongsideVertical(x, w)
+	}
+
+	wLast := w.row + len(w.word) - 1
+	xLast := x.row + len(x.word) - 1
+	return w.row >= x.row && w.row <= xLast || wLast >= x.row && wLast <= xLast;
+}
+
+func isAlongside(w, x Word) bool {
+	if w.across != x.across {
+		return false
+	}
+
+	if w.across {
+		return isAlongsideHorizontal(w, x)
+	}
+	return isAlongsideVertical(w, x)
+}
+
+func isWithinBoundaries(xword []Word, w Word) bool {
+	// Too much copying here.
+	newXword := append(xword, w)
+
+	upperLeft, lowerRight := findBoundaries(newXword)
+	return lowerRight.column - upperLeft.column + 1 > Boundary || lowerRight.row - upperLeft.row + 1 > Boundary
+}
+
+func findCrossings(w Word, s string) []Word {
+	var crossings []Word
 	if w.across {
 		// Pretend that w starts at (0, 0). The math is easier.
 		for c := 0; c < len(w.word); c++ {
 			for r := -len(s) + 1; r < 1; r++ {
 				if w.word[c] == s[r + len(s) - 1] {
-					// Now displace the second word.
-					crossings = append(crossings, &Word{s, false, r + w.row, c + w.column})
+					crossings = append(crossings, Word{s, false, r + w.row, c + w.column})
 				}
 			}
 		}
@@ -132,29 +177,79 @@ func (w *Word) findCrossings(s string) []*Word {
 		for r := 0; r < len(w.word); r++ {
 			for c := -len(s) + 1; c < 1; c++ {
 				if w.word[r] == s[c + len(s) - 1] {
-					// TODO: Add tests for this.
-					crossings = append(crossings, &Word{s, true, c + w.column, r + w.row})
+					crossings = append(crossings, Word{s, true, c + w.column, r + w.row})
 				}
 			}
 		}
 	}
 
-	// TODO Eliminate crossings that violate length/width restriction!
-
 	return crossings;
 }
 
+func allowed(xword []Word, word Word) bool {
+	if !isWithinBoundaries(xword, word) {
+		return false
+	}
+
+	for _, x := range xword {
+		if isAlongside(word, x) {
+			return false
+		}
+		if overlap(x, word) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func recurse(xword []Word, words []string) ([]Word, bool) {
+	if len(words) == 0 {
+		return xword, true
+	}
+
+	for _, w := range words {
+		xings := findCrossings(xword[len(xword) - 1], w)
+		for _, xing := range xings {
+			if !allowed(xword, xing) {
+				continue
+			}
+			next := append(xword, xing)
+			if blah, ok := recurse(next, words[1:]); ok {
+				return blah, true
+			}
+		}
+	}
+
+	return nil, false
+}
+
+func createCrossword(words []string) []Word {
+	if len(words) == 0 {
+		return[]Word{}
+	}
+	across := Word{words[0], true, 0, 0}
+	if xword, ok := recurse([]Word{across}, words[1:]); ok {
+		return xword
+	}
+	down := Word{words[0], false, 0, 0}
+	if xword, ok := recurse([]Word{down}, words[1:]); ok {
+		return xword
+	}
+	return nil
+}
+
 func TestString(t *testing.T) {
-	xword := Crossword{}
-	s := xword.String()
+	xword := Xword{}
+	s := xword.render()
 	t.Logf("%s", s);
 
-	alien := Crossword{[]Word{{"ALIEN", true, 0, 0}, {"ALIEN", false, 0, 0}}}
-	s = alien.String()
+	alien := Xword{{"ALIEN", true, 0, 0}, {"ALIEN", false, 0, 0}}
+	s = alien.render()
 	t.Logf("%s", s)
 
-	animals := Crossword{[]Word{{"ALIEN", true, 0, 0}, {"ANIMAL", false, -1, 4}}}
-	s = animals.String()
+	animals := Xword{{"ALIEN", true, 0, 0}, {"ANIMAL", false, -1, 4}}
+	s = animals.render()
 	t.Logf("%s", s)
 }
 
@@ -163,12 +258,11 @@ func TestCrossings(t *testing.T) {
 	// the number of crossings must equal the
 	// number of letters.
 	word := Word{"ALIEN", true, 0, 0}
-	crossings := word.findCrossings("ALIEN")
+	crossings := findCrossings(word, "ALIEN")
 	t.Logf("Found %v", crossings)
 
-
 	badWord := Word{"SYRINX", true, 0, 0}
-	noCrossings := badWord.findCrossings("MOPE")
+	noCrossings := findCrossings(badWord, "MOPE")
 	if len(noCrossings) > 0 {
 		t.Error("Should be 0")
 	}
@@ -188,15 +282,23 @@ func TestCollisions(t *testing.T) {
 		{Word{ "GWALIOR", true, 0, 0}, Word{"GWALIOR", true, 0, 7}, false },
 	}
 	for i, test := range table {
-		if test.w.collides(&test.x) != test.expected {
+		if overlap(test.w, test.x) != test.expected {
 			t.Errorf("Row %d: %v and %v collision expected %v", i, test.w, test.x, test.expected)
 		}
 
 		// Test the commutation!
-		if test.x.collides(&test.w) != test.expected {
+		if overlap(test.x, test.w) != test.expected {
 			t.Errorf("Row %d: %v and %v collision (inverted) expected %v", i, test.w, test.x, test.expected)
 		}
+	}
+}
 
-		// TODO Now switch all the values for "horizontal".
+func TestSamples(t *testing.T) {
+	table := [][]string{
+		{ "LONDON", "DELHI", "ICELANDA", "ANKARA"},
+	}
+	for _, row := range table {
+		answer := createCrossword(row)
+		t.Logf("%v", answer)
 	}
 }
