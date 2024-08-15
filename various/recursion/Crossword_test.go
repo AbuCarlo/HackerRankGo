@@ -62,7 +62,7 @@ func findSlots(xword []string) []Slot {
 			for ; lastColumn < Size && s[lastColumn] == '-'; lastColumn++ {
 				//
 			}
-			if lastColumn > column + 1 {
+			if lastColumn > column+1 {
 				slot := Slot{true, row, column, lastColumn - column, ""}
 				slots = append(slots, slot)
 				column = lastColumn
@@ -192,6 +192,21 @@ func TestSamples(t *testing.T) {
 				"+++++-++++",
 			},
 			strings.Split("LONDON;DELHI;ICELAND;ANKARA", ";"),
+		},
+		{
+			[]string{
+				"+-++++++++",
+				"+-++++++++",
+				"+-------++",
+				"+-++++++++",
+				"+-++++++++",
+				"+------+++",
+				"+-+++-++++",
+				"+++++-++++",
+				"+++++-++++",
+				"++++++++++",
+			},
+			strings.Split("AGRA;NORWAY;ENGLAND;GWALIOR", ";"),
 		},
 	}
 	for _, row := range table {
