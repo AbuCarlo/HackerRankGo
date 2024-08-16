@@ -28,7 +28,7 @@ func populateGrid() [][]rune {
 	return rows
 }
 
-func render(answer []Slot) string {
+func render(answer []Slot) []string {
 	grid := populateGrid()
 
 	for _, o := range answer {
@@ -45,7 +45,8 @@ func render(answer []Slot) string {
 	for i := 0; i < len(grid); i++ {
 		result[i] = string(grid[i])
 	}
-	return strings.Join(result, "\n")
+	
+	return result
 }
 
 func findSlots(xword []string) []Slot {
@@ -167,7 +168,7 @@ func recurse(occupied []Slot, open []Slot, words []string) ([]Slot, bool) {
 	return nil, false
 }
 
-func solve(puzzle []string, words []string) string {
+func crosswordPuzzle(puzzle []string, words []string) []string {
 	slots := findSlots(puzzle)
 	result, _ := recurse(nil, slots, words)
 	return render(result)
@@ -229,7 +230,7 @@ func TestSamples(t *testing.T) {
 	for _, row := range table {
 		words := append([]string{}, row.words...)
 		rand.Shuffle(len(words), func(i, j int) { words[i], words[j] = words[j], words[i] })
-		answer := solve(row.puzzle, row.words)
-		t.Logf("%v", answer)
+		answer := crosswordPuzzle(row.puzzle, row.words)
+		t.Logf("%v", strings.Join(answer, "\n"))
 	}
 }
