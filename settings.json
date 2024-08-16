@@ -1,5 +1,6 @@
 {
     "files.eol": "\n",
+    "go.testFlags": ["-v"],
     "todohighlight.isEnable": true,
     "todohighlight.keywords":  [
         "DEBUG:",
