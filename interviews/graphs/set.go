@@ -24,3 +24,9 @@ func (s *Set[V]) Clear() {
 func (s *Set[V]) Size() int {
 	return len(s.m)
 }
+
+func New[V comparable]() *Set[V] {
+	s := Set[V]{}
+	s.m = make(map[V]struct{})
+	return &s
+}
