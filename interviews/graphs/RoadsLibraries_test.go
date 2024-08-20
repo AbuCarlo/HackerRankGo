@@ -1,19 +1,21 @@
 package graphs
 
 // See https://en.wikipedia.org/wiki/Disjoint-set_data_structure
-// See 
+// See
 
 import (
+	// "testing"
 	"testing"
 
 	"github.com/abucarlo/hackerrank/interviews/graphs/sets"
+	"pgregory.net/rapid"
 )
 
 type DisjointSets map[int]*sets.Set[int]
 
 type UndirectedGraph struct {
 	// TODO: Rename "parents"
-	roots map[int]int
+	parents map[int]int
 	adjacency map[int]*sets.Set[int]
 }
 
@@ -33,7 +35,7 @@ func (g *UndirectedGraph) FindDisjoint() []UndirectedGraph {
 
 	disjoints := make(DisjointSets)
 	// Now give each subgraph its adjacency matrix.
-	for v, _ := range g.roots {
+	for v, _ := range g.parents {
 		root := g.FindRoot(v)
 		s, has := disjoints[root]
 		if !has {
@@ -42,6 +44,7 @@ func (g *UndirectedGraph) FindDisjoint() []UndirectedGraph {
 		}
 		s.Add(v)
 		s.Add(root)
+		disjoints[root] = s
 	}
 
 	var trees []UndirectedGraph 
@@ -70,13 +73,19 @@ func (g *UndirectedGraph) FindDisjoint() []UndirectedGraph {
 }
 
 func (g *UndirectedGraph) Insert(u, v int) {
+	if u == v {
+		panic("u must not == v")
+	}
 	// Since it's an undirected graph, let's just
 	// decide to make the the lower vertex number
 	// the root.
-	if u > v {
-		u, v = v, u
+	// TODO: Collapse these tests.
+	if _, ok := g.parents[v]; !ok {
+		g.parents[v] = g.FindRoot(u)
 	}
-	g.roots[v] = g.FindRoot(u)
+	if _, ok := g.parents[v]; !ok {
+		g.parents[v] = v
+	}
 	if _, ok := g.adjacency[u]; !ok {
 		g.adjacency[u] = sets.New[int]()
 	}
@@ -88,28 +97,41 @@ func (g *UndirectedGraph) Insert(u, v int) {
 }
 
 func (g *UndirectedGraph) FindRoot(v int) int {
-	u, ok := g.roots[v]
+	u, ok := g.parents[v]
 	if !ok {
-		g.roots[v] = v
+		g.parents[v] = v
 		return v
 	}
 	// Follow the path to the root, compressing all the while.
 	// See https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Finding_set_representatives
-	for u != g.roots[u] {
-		u, g.roots[u] = g.roots[u], g.roots[g.roots[u]]
+	for u != g.parents[u] {
+		u, g.parents[u] = g.parents[u], g.parents[g.parents[u]]
 	}
 
 	return u
 }
 
+// func mTestPathGraph(t *testing.T) {
+
+// }
+
 func TestStarGraph(t *testing.T) {
-	g := NewUndirectedGraph()
-	for i := 2; i < 10; i++ {
-		g.Insert(1, i)
+
+	f := func(t *rapid.T) {
+		n := rapid.IntRange(1, 9999).Draw(t, "size")
+		v := rapid.IntRange(1, n).Filter(func (m int) bool { return m != n }).Draw(t, "axis")
+		
+		graph := NewUndirectedGraph()
+		for u := 1; u <= n; u++ {
+			if u != v {
+				graph.Insert(u, v)
+			}
+		}
+	
+		d := graph.FindDisjoint()
+		if len(d) != 1 {
+			t.Errorf("A star graph of %d nodes centered on %d should have 1 connected subgraph, not %d", n, v, len(d))
+		}
 	}
-
-	d := g.FindDisjoint()
-	t.Logf("%v", d)
+	rapid.Check(t, f)
 }
-
-// TODO: Star graphs, paths.
