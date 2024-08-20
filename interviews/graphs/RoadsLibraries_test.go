@@ -4,7 +4,6 @@ package graphs
 // See
 
 import (
-	// "testing"
 	"math/rand"
 	"testing"
 
@@ -15,13 +14,12 @@ import (
 type DisjointSets map[int]*sets.Set[int]
 
 type UndirectedGraph struct {
-	// TODO: Rename "parents"
-	parents map[int]int
+	parents   map[int]int
 	adjacency map[int]*sets.Set[int]
 }
 
 func NewUndirectedGraph() *UndirectedGraph {
-	g := UndirectedGraph{ make(map[int]int), make(map[int]*sets.Set[int]) }
+	g := UndirectedGraph{make(map[int]int), make(map[int]*sets.Set[int])}
 	return &g
 }
 
@@ -48,7 +46,7 @@ func (g *UndirectedGraph) FindDisjoint() []UndirectedGraph {
 		disjoints[root] = s
 	}
 
-	var trees []UndirectedGraph 
+	var trees []UndirectedGraph
 	for _, s := range disjoints {
 		// Construct a new subgraph
 		// in which every adjacency list
@@ -66,7 +64,7 @@ func (g *UndirectedGraph) FindDisjoint() []UndirectedGraph {
 				mst.Insert(u, v)
 			}
 		}
-		
+
 		trees = append(trees, *mst)
 	}
 
@@ -113,7 +111,7 @@ func (g *UndirectedGraph) FindRoot(v int) int {
 func TestPathGraph(t *testing.T) {
 	f := func(t *rapid.T) {
 		path := rapid.Custom[[]int](func(t *rapid.T) []int {
-			size:= rapid.IntRange(2, 9999).Draw(t, "size")
+			size := rapid.IntRange(2, 9999).Draw(t, "size")
 			seed := rapid.Int64().Draw(t, "seed")
 			result := make([]int, size)
 			for i := range result {
@@ -126,13 +124,13 @@ func TestPathGraph(t *testing.T) {
 		})
 
 		vertices := path.Draw(t, "path")
-		
+
 		graph := NewUndirectedGraph()
 		for i, u := range vertices {
 			if i == 0 {
 				continue
 			}
-			graph.Insert(vertices[i - 1], u)
+			graph.Insert(vertices[i-1], u)
 		}
 
 		trees := graph.FindDisjoint()
@@ -149,19 +147,66 @@ func TestStarGraph(t *testing.T) {
 
 	f := func(t *rapid.T) {
 		n := rapid.IntRange(1, 9999).Draw(t, "size")
-		v := rapid.IntRange(1, n).Filter(func (m int) bool { return m != n }).Draw(t, "axis")
-		
+		v := rapid.IntRange(1, n).Filter(func(m int) bool { return m != n }).Draw(t, "axis")
+
 		graph := NewUndirectedGraph()
 		for u := 1; u <= n; u++ {
 			if u != v {
 				graph.Insert(u, v)
 			}
 		}
-	
+
 		d := graph.FindDisjoint()
 		if len(d) != 1 {
 			t.Errorf("A star graph of %d nodes centered on %d should have 1 connected subgraph, not %d", n, v, len(d))
 		}
 	}
 	rapid.Check(t, f)
+}
+
+func Solve(n int, edges [][]int, library int, road int) int {
+	graph := NewUndirectedGraph()
+	for _, edge := range edges {
+		u, v := edge[0], edge[1]
+		graph.Insert(u, v)
+
+	}
+
+	trees := graph.FindDisjoint()
+	if library > road {
+		result := 0
+		for _, t := range trees {
+			result += library + (len(t.adjacency)-1)*road
+		}
+		return result
+	}
+
+	result := 0
+	for _, t := range trees {
+		// Every city gets its own library.
+		result += library * len(t.adjacency)
+	}
+	return result
+}
+
+func TestSamples(t *testing.T) {
+	type Test struct {
+		n        int
+		library  int
+		road     int
+		vertices [][]int
+		expected int
+	}
+
+	tests := []Test{
+		{3, 2, 1, [][]int{{1, 2}, {3, 1}, {2, 3}}, 4},
+		{6, 2, 5, [][]int{{1, 3}, {3, 4}, {2, 4}, {1, 2}, {2, 3}, {5, 6}}, 12},
+	}
+
+	for _, test := range tests {
+		actual := Solve(test.n, test.vertices, test.library, test.road)
+		if actual != test.expected {
+			t.Errorf("Expected %d; got %d", test.expected, actual)
+		}
+	}
 }
