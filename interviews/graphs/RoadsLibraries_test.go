@@ -5,6 +5,7 @@ package graphs
 
 import (
 	// "testing"
+	"math/rand"
 	"testing"
 
 	"github.com/abucarlo/hackerrank/interviews/graphs/sets"
@@ -82,13 +83,15 @@ func (g *UndirectedGraph) Insert(u, v int) {
 	// TODO: Collapse these tests.
 	if _, ok := g.parents[v]; !ok {
 		g.parents[v] = g.FindRoot(u)
-		g.adjacency[v] = sets.New[int]()
 	}
 	if _, ok := g.parents[v]; !ok {
 		g.parents[v] = v
 	}
 	if _, ok := g.adjacency[u]; !ok {
 		g.adjacency[u] = sets.New[int]()
+	}
+	if _, ok := g.adjacency[v]; !ok {
+		g.adjacency[v] = sets.New[int]()
 	}
 	g.adjacency[u].Add(v)
 	g.adjacency[v].Add(u)
@@ -109,9 +112,39 @@ func (g *UndirectedGraph) FindRoot(v int) int {
 	return u
 }
 
-// func mTestPathGraph(t *testing.T) {
+func TestPathGraph(t *testing.T) {
+	f := func(t *rapid.T) {
+		path := rapid.Custom[[]int](func(t *rapid.T) []int {
+			size:= rapid.IntRange(2, 9999).Draw(t, "size")
+			seed := rapid.Int64().Draw(t, "seed")
+			result := make([]int, size)
+			for i := range result {
+				result[i] = i + 1
+			}
+			source := rand.NewSource(seed)
+			r := rand.New(source)
+			r.Shuffle(len(result), func(i, j int) { result[i], result[j] = result[j], result[i] })
+			return result
+		})
 
-// }
+		blah := path.Draw(t, "path")
+		
+		graph := NewUndirectedGraph()
+		for i, u := range blah {
+			if i == 0 {
+				continue
+			}
+			graph.Insert(blah[i - 1], u)
+		}
+
+		fart := graph.FindDisjoint()
+		if len(fart) != 1 {
+			t.Errorf("A path graph should have 1 disjoint, not %d", len(blah))
+		}
+	}
+
+	rapid.Check(t, f)
+}
 
 func TestStarGraph(t *testing.T) {
 
