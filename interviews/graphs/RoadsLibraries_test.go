@@ -80,7 +80,6 @@ func (g *UndirectedGraph) Insert(u, v int) {
 	// Since it's an undirected graph, let's just
 	// decide to make the the lower vertex number
 	// the root.
-	// TODO: Collapse these tests.
 	if _, ok := g.parents[v]; !ok {
 		g.parents[v] = g.FindRoot(u)
 		g.adjacency[v] = sets.New[int]()
@@ -110,6 +109,7 @@ func (g *UndirectedGraph) FindRoot(v int) int {
 	return parent
 }
 
+// https://en.wikipedia.org/wiki/Path_graph
 func TestPathGraph(t *testing.T) {
 	f := func(t *rapid.T) {
 		path := rapid.Custom[[]int](func(t *rapid.T) []int {
@@ -144,6 +144,7 @@ func TestPathGraph(t *testing.T) {
 	rapid.Check(t, f)
 }
 
+// https://en.wikipedia.org/wiki/Star_(graph_theory)
 func TestStarGraph(t *testing.T) {
 
 	f := func(t *rapid.T) {
