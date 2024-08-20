@@ -127,19 +127,19 @@ func TestPathGraph(t *testing.T) {
 			return result
 		})
 
-		blah := path.Draw(t, "path")
+		vertices := path.Draw(t, "path")
 		
 		graph := NewUndirectedGraph()
-		for i, u := range blah {
+		for i, u := range vertices {
 			if i == 0 {
 				continue
 			}
-			graph.Insert(blah[i - 1], u)
+			graph.Insert(vertices[i - 1], u)
 		}
 
-		fart := graph.FindDisjoint()
-		if len(fart) != 1 {
-			t.Errorf("A path graph should have 1 disjoint, not %d", len(blah))
+		trees := graph.FindDisjoint()
+		if len(trees) != 1 {
+			t.Errorf("A path graph should have 1 disjoint, not %d", len(vertices))
 		}
 	}
 
