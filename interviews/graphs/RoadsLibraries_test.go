@@ -82,15 +82,13 @@ func (g *UndirectedGraph) Insert(u, v int) {
 	// TODO: Collapse these tests.
 	if _, ok := g.parents[v]; !ok {
 		g.parents[v] = g.FindRoot(u)
+		g.adjacency[v] = sets.New[int]()
 	}
 	if _, ok := g.parents[v]; !ok {
 		g.parents[v] = v
 	}
 	if _, ok := g.adjacency[u]; !ok {
 		g.adjacency[u] = sets.New[int]()
-	}
-	if _, ok := g.adjacency[v]; !ok {
-		g.adjacency[v] = sets.New[int]()
 	}
 	g.adjacency[u].Add(v)
 	g.adjacency[v].Add(u)
