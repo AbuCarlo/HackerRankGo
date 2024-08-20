@@ -83,33 +83,31 @@ func (g *UndirectedGraph) Insert(u, v int) {
 	// TODO: Collapse these tests.
 	if _, ok := g.parents[v]; !ok {
 		g.parents[v] = g.FindRoot(u)
+		g.adjacency[v] = sets.New[int]()
 	}
-	if _, ok := g.parents[v]; !ok {
-		g.parents[v] = v
-	}
+
 	if _, ok := g.adjacency[u]; !ok {
 		g.adjacency[u] = sets.New[int]()
 	}
-	if _, ok := g.adjacency[v]; !ok {
-		g.adjacency[v] = sets.New[int]()
-	}
+
 	g.adjacency[u].Add(v)
 	g.adjacency[v].Add(u)
 }
 
 func (g *UndirectedGraph) FindRoot(v int) int {
-	u, ok := g.parents[v]
+	parent, ok := g.parents[v]
 	if !ok {
 		g.parents[v] = v
+		g.adjacency[v] = sets.New[int]()
 		return v
 	}
 	// Follow the path to the root, compressing all the while.
 	// See https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Finding_set_representatives
-	for u != g.parents[u] {
-		u, g.parents[u] = g.parents[u], g.parents[g.parents[u]]
+	for parent != g.parents[parent] {
+		parent, g.parents[parent] = g.parents[parent], g.parents[g.parents[parent]]
 	}
 
-	return u
+	return parent
 }
 
 func TestPathGraph(t *testing.T) {
