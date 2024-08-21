@@ -93,7 +93,7 @@ func FindRoot(parents map[int32]int32, v int32) int32 {
 	return parent
 }
 
-func (g *UndirectedGraph) FindDisjoint() []UndirectedGraph {
+func (g *UndirectedGraph) FindDisconnected() []UndirectedGraph {
 	// To get distinct values in a slice:
 	// https://stackoverflow.com/a/76471309/476942
 	// To get a map's keys as a slice, see
@@ -193,7 +193,7 @@ func roadsAndLibraries(order int32, library int32, road int32, edges [][]int32) 
 		graph.Insert(u, v)
 	}
 
-	trees := graph.FindDisjoint()
+	trees := graph.FindDisconnected()
 	if library > road {
 		result := int64(0)
 		for _, t := range trees {
@@ -205,12 +205,7 @@ func roadsAndLibraries(order int32, library int32, road int32, edges [][]int32) 
 		return result
 	}
 
-	result := int64(0)
-	for _, t := range trees {
-		// Every city gets its own library.
-		result += int64(library) * int64(len(t.adjacency))
-	}
-	return result
+	return int64(library * order)
 }
 
 // https://en.wikipedia.org/wiki/Path_graph
@@ -239,7 +234,7 @@ func TestPathGraph(t *testing.T) {
 			graph.Insert(vertices[i-1], u)
 		}
 
-		trees := graph.FindDisjoint()
+		trees := graph.FindDisconnected()
 		if len(trees) != 1 {
 			t.Errorf("A path graph should have 1 connected component, not %d", len(vertices))
 		}
@@ -265,7 +260,7 @@ func TestStarGraph(t *testing.T) {
 			}
 		}
 
-		trees := graph.FindDisjoint()
+		trees := graph.FindDisconnected()
 		if len(trees) != 1 {
 			t.Errorf("A star graph of %d nodes centered on %d should have 1 connected subgraph, not %d", order, v, len(trees))
 		}
@@ -288,7 +283,7 @@ func TestStronglyConnected(t *testing.T) {
 			}
 		}
 
-		d := graph.FindDisjoint()
+		d := graph.FindDisconnected()
 		if len(d) != 1 {
 			t.Errorf("A strongly connected graph of %d nodes should have 1 connected subgraph, not %d", order, len(d))
 		}
