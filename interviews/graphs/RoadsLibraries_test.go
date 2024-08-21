@@ -201,7 +201,7 @@ func roadsAndLibraries(order int32, library int32, road int32, edges [][]int32) 
 		}
 		// Correction: there might be vertices with no edges.
 		disconnected := order - int32(len(graph.adjacency))
-		result += int64(disconnected * library)
+		result += int64(disconnected) * int64(library)
 		return result
 	}
 
