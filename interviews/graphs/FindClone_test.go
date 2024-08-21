@@ -10,11 +10,11 @@ type ColoredGraph struct {
 	order int32
 	adjacency map[int32]*Set[int32]
 	// This seems insane.
-	colors map[int32]int64
+	colors map[int32]int32
 }
 
 func NewColoredGraph(order int32) *ColoredGraph {
-	g := ColoredGraph{order, make(map[int32]*Set[int32]), make(map[int32]int64)}
+	g := ColoredGraph{order, make(map[int32]*Set[int32]), make(map[int32]int32)}
 	return &g
 }
 
@@ -27,6 +27,32 @@ func (g *ColoredGraph) AddEdge(u, v int32) {
 	}
 	g.adjacency[u].Add(v)
 	g.adjacency[v].Add(u)
+}
+
+func (g *ColoredGraph) Color(colors... int32) {
+	for i, color := range colors {
+		g.colors[int32(i + 1)] = color
+	}
+}
+
+func (g *ColoredGraph) FindClone(color int32) int64 {
+	distances := g.FloydWarshall()
+	result := int64(math.MaxInt64)
+	for v := int32(1); v <= g.order; v++ {
+		if g.colors[v] != color {
+			continue
+		}
+		for u := v + 1; u <= g.order; u++ {
+			if g.colors[u] != color {
+				continue
+			}
+			result = min(result, distances[v][u])
+		}
+	}
+	if result == math.MaxInt64 {
+		return -1
+	}
+	return result
 }
 
 func (g *ColoredGraph) FloydWarshall() [][]int64 {
@@ -67,13 +93,31 @@ func (g *ColoredGraph) FloydWarshall() [][]int64 {
 }
 
 func TestFindCloneSamples(t *testing.T) {
-	g := NewColoredGraph(4)
-	g.AddEdge(1, 2)
-	g.AddEdge(1, 3)
-	g.AddEdge(2, 4)
+	testCases := []struct {
+		order int32
+		from []int32
+		to []int32
+		colors []int32
+		clone int32
+		expected int32
+	}{
+		{ 4, []int32{1, 1, 2}, []int32{2, 3, 4}, []int32{1, 2, 1, 1 }, 1, 1 },
+		{ 4, []int32{1, 1, 4}, []int32{2, 3, 2}, []int32{1, 2, 3, 4}, 2, -1 },
+	}
 
-	distances := g.FloydWarshall()
-	t.Logf("Distances: %v", distances)
+	for i, test := range testCases {
+		g := NewColoredGraph(test.order)
+		for j, u := range test.from {
+			g.AddEdge(u, test.to[j])
+		}
+		g.Color(test.colors...)
+		actual := g.FindClone(test.clone)
+		if actual != int64(test.expected) {
+			t.Errorf("Test %d expected %d, found %d", i, test.expected, actual)
+		} else {
+			t.Logf("Test %d expected %d, found %d", i, test.expected, actual)
+		}
+	}
 }
 
 
