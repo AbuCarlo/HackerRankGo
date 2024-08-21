@@ -101,8 +101,11 @@ func TestFindCloneSamples(t *testing.T) {
 		clone int32
 		expected int32
 	}{
+		// free samples
 		{ 4, []int32{1, 1, 2}, []int32{2, 3, 4}, []int32{1, 2, 1, 1 }, 1, 1 },
 		{ 4, []int32{1, 1, 4}, []int32{2, 3, 2}, []int32{1, 2, 3, 4}, 2, -1 },
+		{ 5, []int32{1, 1, 2, 3}, []int32{2, 3, 4, 5}, []int32{1, 2, 3, 3, 2}, 2, 3 },
+		// Test Case 1
 	}
 
 	for i, test := range testCases {
