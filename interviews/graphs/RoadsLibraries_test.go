@@ -83,9 +83,10 @@ func (g *UndirectedGraph) Size() int32 {
 }
 
 func FindRoot(parents map[int32]int32, v int32) int32 {
+	parent := parents[v]
 	// Follow the path to the root, compressing all the while.
 	// See https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Finding_set_representatives
-	for parent := parents[v]; parent != parents[parent] {
+	for parent != parents[parent] {
 		parent, parents[parent] = parents[parent], parents[parents[parent]]
 	}
 
@@ -204,7 +205,7 @@ func roadsAndLibraries(order int32, library int32, road int32, edges [][]int32) 
 		return result
 	}
 
-	return int64(library * order)
+	return int64(library) * int64(order)
 }
 
 // https://en.wikipedia.org/wiki/Path_graph
