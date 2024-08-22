@@ -14,11 +14,11 @@ type ColoredGraph struct {
 	order int32
 	adjacency map[int32]*Set[int32]
 	// This seems insane.
-	colors map[int32]int64
+	colors []int64
 }
 
 func NewColoredGraph(order int32) *ColoredGraph {
-	g := ColoredGraph{order, make(map[int32]*Set[int32]), make(map[int32]int64)}
+	g := ColoredGraph{order, make(map[int32]*Set[int32]), make([]int64, order + 1)}
 	return &g
 }
 
@@ -32,10 +32,8 @@ func (g *ColoredGraph) AddEdge(u, v int32) {
 	g.adjacency[u].Add(v)
 }
 
-func (g *ColoredGraph) Color(colors... int64) {
-	for i, color := range colors {
-		g.colors[int32(i + 1)] = color
-	}
+func (g *ColoredGraph) Color(v int32, color int64) {
+	g.colors[int(v)] = color
 }
 
 func (g *ColoredGraph) FindClone(color int64) int64 {
@@ -105,7 +103,9 @@ func ConstructTestCase(order int32, from []int32, to []int32, colors []int64) *C
 	for j, u := range from {
 		g.AddEdge(u, to[j])
 	}
-	g.Color(colors...)
+	for i, color := range colors {
+		g.Color(int32(i + 1), color)
+	}
 	return g
 }
 
@@ -143,11 +143,10 @@ func TestFindCloneSamples(t *testing.T) {
 	}
 }
 
-func loadTestCase(t *testing.T, file string) (*ColoredGraph, int64) {
-	t.Logf("Opening %s", file)
+func loadTestCase(file string) (*ColoredGraph, int64) {
 	inputFile, err := os.Open(file)
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 	defer inputFile.Close()
 
@@ -157,8 +156,6 @@ func loadTestCase(t *testing.T, file string) (*ColoredGraph, int64) {
     graphNodesEdges := strings.Split(scanner.Text(), " ")
     order, _ := strconv.ParseInt(graphNodesEdges[0], 10, 32)
     size, _ := strconv.ParseInt(graphNodesEdges[1], 10, 32)
-
-	t.Logf("Order: %d, size: %d", order, size)
 
 	g := NewColoredGraph(int32(order))
 
@@ -171,13 +168,10 @@ func loadTestCase(t *testing.T, file string) (*ColoredGraph, int64) {
 	}
 
 	scanner.Scan()
-	colors := []int64{}
-	for _, s := range strings.Split(scanner.Text(), " ") {
+	for i, s := range strings.Split(scanner.Text(), " ") {
 		color, _ := strconv.ParseInt(s, 10, 32)
-		colors = append(colors, color)
+		g.Color(int32(i + 1), color)
 	}
-
-	g.Color(colors...)
 
 	scanner.Scan()
 	value, _ := strconv.ParseInt(scanner.Text(), 10, 32)
@@ -185,15 +179,17 @@ func loadTestCase(t *testing.T, file string) (*ColoredGraph, int64) {
 	return g, value
 }
 
+var directory = "./find-clone-inputs"
+
 func TestFindCloneFiles(t *testing.T) {
 	// Benchmark?
-	directory := "./find-clone-inputs"
+	
 	testCases := []struct{ file string; expected int64 }{
 		{ "input04.txt", -1 },
 		{ "input05.txt", -1 },
 	}
 	for _, test := range testCases {
-		g, color := loadTestCase(t, directory + "/" + test.file)
+		g, color := loadTestCase(directory + "/" + test.file)
 		actual := g.FindClone(color)
 		if actual != test.expected {
 			t.Errorf("Test %s expected %d, found %d", test.file, test.expected, actual)
@@ -201,6 +197,14 @@ func TestFindCloneFiles(t *testing.T) {
 				t.Logf("Test %s expected %d, found %d", test.file, test.expected, actual)
 		}
 	}
+}
+
+func BenchmarkFindClone(b *testing.B) {
+	g, color := loadTestCase(directory + "/" + "input04.txt")
+
+	for i := 0; i < b.N; i++ {
+        g.FindClone(color)
+    }
 }
 
 
