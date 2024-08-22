@@ -38,15 +38,15 @@ func (g *ColoredGraph) Color(colors... int64) {
 func (g *ColoredGraph) FindClone(color int64) int64 {
 	distances := g.FloydWarshall()
 	result := int64(math.MaxInt64)
-	for v := int32(1); v <= g.order; v++ {
-		if g.colors[v] != color {
+	for u := int32(1); u <= g.order; u++ {
+		if g.colors[u] != color {
 			continue
 		}
-		for u := v + 1; u <= g.order; u++ {
-			if g.colors[u] != color {
+		for v := int32(1); v < u; v++ {
+			if g.colors[v] != color {
 				continue
 			}
-			result = min(result, distances[v][u])
+			result = min(result, distances[u][v])
 		}
 	}
 	if result == math.MaxInt64 {
@@ -59,11 +59,11 @@ func (g *ColoredGraph) FloydWarshall() [][]int64 {
 	distances := make([][]int64, g.order + 1)
 	// There is no Fill() or Repeat() function yet.
 	pattern := make([]int64, g.order + 1)
-	for i := range pattern {
+	for i := 1; i <= int(g.order); i++ {
 		pattern[i] = math.MaxInt32
 	}
-	for i := range distances {
-		distances[i] = slices.Clone(pattern)
+	for i := 1; i <= int(g.order); i++ {
+		distances[i] = slices.Clone(pattern[:i + 1])
 	}
 	for v, a := range g.adjacency {
 		distances[v][v] = 0
@@ -71,27 +71,35 @@ func (g *ColoredGraph) FloydWarshall() [][]int64 {
 			continue
 		}
 		for _, u := range a.Items() {
-			distances[v][u] = 1
-			distances[u][v] = 1
+			if u < v {
+				distances[v][u] = 1
+			} else {
+				distances[u][v] = 1
+			}
 		}
 	}
 	// Cut this in half.
 	for k := int32(1); k <= g.order; k++ {
-		for j := int32(1); j <= g.order; j++ {
-			for i := int32(1); i <= g.order; i++ {
-				choice := distances[i][k] + distances[k][j]
-				if choice < distances[i][j] {
-					distances[i][j] = choice
-					// Eliminate these.
-					distances[j][i] = choice
+		for i := int32(1); i <= g.order; i++ {
+			for j := int32(1); j < i; j++ {
+				var choice int64
+				if i > k {
+					choice = distances[i][k]
+				} else {
+					choice = distances[k][i]
 				}
+				if k > j {
+					choice += distances[k][j]
+				} else {
+					choice += distances[j][k]
+				}
+				distances[i][j] = min(choice, distances[i][j])
 			}
 		}
 	}
 
 	return distances
 }
-
 
 func ConstructTestCase(order int32, from []int32, to []int32, colors []int64) *ColoredGraph {
 	g := NewColoredGraph(order)
