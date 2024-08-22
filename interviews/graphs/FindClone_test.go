@@ -2,6 +2,7 @@ package graphs
 
 import (
 	"bufio"
+	"fmt"
 	"math"
 	"os"
 	"slices"
@@ -11,14 +12,14 @@ import (
 )
 
 type ColoredGraph struct {
-	order int32
+	order     int32
 	adjacency map[int32]*Set[int32]
 	// This seems insane.
 	colors []int32
 }
 
 func NewColoredGraph(order int32) *ColoredGraph {
-	g := ColoredGraph{order, make(map[int32]*Set[int32]), make([]int32, order + 1)}
+	g := ColoredGraph{order, make(map[int32]*Set[int32]), make([]int32, order+1)}
 	return &g
 }
 
@@ -73,7 +74,7 @@ func findRoot(parents map[int32]int32, v int32) int32 {
 }
 
 func (g *ColoredGraph) IsConnected(color int32) bool {
-
+	fmt.Printf("Graph has order %d\n", g.order)
 	type _DisjointSets map[int32]*Set[int32]
 
 	parents := make(map[int32]int32)
@@ -102,7 +103,9 @@ func (g *ColoredGraph) IsConnected(color int32) bool {
 		}
 	}
 
+	fmt.Printf("%d disjoint sets\n", len(disjoints))
 	for _, s := range disjoints {
+		fmt.Printf("Disjoint set of size %d\n", s.Size())
 		count := 0
 		for _, v := range s.Items() {
 			if g.colors[v] == color {
@@ -118,14 +121,14 @@ func (g *ColoredGraph) IsConnected(color int32) bool {
 }
 
 func (g *ColoredGraph) FloydWarshall() [][]int64 {
-	distances := make([][]int64, g.order + 1)
+	distances := make([][]int64, g.order+1)
 	// There is no Fill() or Repeat() function yet.
-	pattern := make([]int64, g.order + 1)
+	pattern := make([]int64, g.order+1)
 	for i := 1; i <= int(g.order); i++ {
 		pattern[i] = math.MaxInt32
 	}
 	for i := 1; i <= int(g.order); i++ {
-		distances[i] = slices.Clone(pattern[:i + 1])
+		distances[i] = slices.Clone(pattern[:i+1])
 	}
 	for u, a := range g.adjacency {
 		distances[u][u] = 0
@@ -165,32 +168,32 @@ func ConstructTestCase(order int32, from []int32, to []int32, colors []int64) *C
 		g.AddEdge(u, to[j])
 	}
 	for i, color := range colors {
-		g.Color(int32(i + 1), int32(color))
+		g.Color(int32(i+1), int32(color))
 	}
 	return g
 }
 
 func findShortest(graphNodes int32, graphFrom []int32, graphTo []int32, ids []int64, val int32) int32 {
 
-    g := ConstructTestCase(graphNodes, graphFrom, graphTo, ids)
+	g := ConstructTestCase(graphNodes, graphFrom, graphTo, ids)
 	return int32(g.FindClone(val))
 }
 
 func TestFindCloneSamples(t *testing.T) {
 	testCases := []struct {
-		order int32
-		from []int32
-		to []int32
-		colors []int64
-		clone int32
+		order    int32
+		from     []int32
+		to       []int32
+		colors   []int64
+		clone    int32
 		expected int32
 	}{
 		// Sample 0, Test Case 0
-		{ 4, []int32{1, 1, 2}, []int32{2, 3, 4}, []int64{1, 2, 1, 1 }, 1, 1 },
+		{4, []int32{1, 1, 2}, []int32{2, 3, 4}, []int64{1, 2, 1, 1}, 1, 1},
 		// Sample 1, Test Case 1
-		{ 4, []int32{1, 1, 4}, []int32{2, 3, 2}, []int64{1, 2, 3, 4}, 2, -1 },
+		{4, []int32{1, 1, 4}, []int32{2, 3, 2}, []int64{1, 2, 3, 4}, 2, -1},
 		// Sample 2
-		{ 5, []int32{1, 1, 2, 3}, []int32{2, 3, 4, 5}, []int64{1, 2, 3, 3, 2}, 2, 3 },
+		{5, []int32{1, 1, 2, 3}, []int32{2, 3, 4, 5}, []int64{1, 2, 3, 3, 2}, 2, 3},
 		// Test Case 2
 	}
 
@@ -214,10 +217,10 @@ func loadTestCase(file string) (*ColoredGraph, int32) {
 
 	scanner := bufio.NewScanner(inputFile)
 	scanner.Scan()
-	
-    graphNodesEdges := strings.Split(scanner.Text(), " ")
-    order, _ := strconv.ParseInt(graphNodesEdges[0], 10, 32)
-    size, _ := strconv.ParseInt(graphNodesEdges[1], 10, 32)
+
+	graphNodesEdges := strings.Split(scanner.Text(), " ")
+	order, _ := strconv.ParseInt(graphNodesEdges[0], 10, 32)
+	size, _ := strconv.ParseInt(graphNodesEdges[1], 10, 32)
 
 	g := NewColoredGraph(int32(order))
 
@@ -232,7 +235,7 @@ func loadTestCase(file string) (*ColoredGraph, int32) {
 	scanner.Scan()
 	for i, s := range strings.Split(scanner.Text(), " ") {
 		color, _ := strconv.ParseInt(s, 10, 32)
-		g.Color(int32(i + 1), int32(color))
+		g.Color(int32(i+1), int32(color))
 	}
 
 	scanner.Scan()
@@ -245,19 +248,21 @@ var directory = "./find-clone-inputs"
 
 func TestFindCloneFiles(t *testing.T) {
 	// Benchmark?
-	
-	testCases := []struct{ file string; expected int32 }{
-		{ "input02.txt", -1 },
-		{ "input04.txt", -1 },
-		{ "input05.txt", -1 },
+
+	testCases := []struct {
+		file     string
+		expected int32
+	}{
+		{"input02.txt", -1},
+		{"input04.txt", -1},
+		{"input05.txt", -1},
 	}
 	for _, test := range testCases {
+		t.Logf("Test %s expecting %d", test.file, test.expected)
 		g, color := loadTestCase(directory + "/" + test.file)
 		actual := g.FindClone(color)
 		if actual != test.expected {
 			t.Errorf("Test %s expected %d, found %d", test.file, test.expected, actual)
-		} else {
-			t.Logf("Test %s expected %d, found %d", test.file, test.expected, actual)
 		}
 	}
 }
@@ -266,9 +271,6 @@ func BenchmarkFindClone(b *testing.B) {
 	g, color := loadTestCase(directory + "/" + "input04.txt")
 
 	for i := 0; i < b.N; i++ {
-        g.FindClone(color)
-    }
+		g.FindClone(color)
+	}
 }
-
-
-
