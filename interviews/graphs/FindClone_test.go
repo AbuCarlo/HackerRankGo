@@ -196,7 +196,7 @@ func TestFindCloneFiles(t *testing.T) {
 		if actual != test.expected {
 			t.Errorf("Test %s expected %d, found %d", test.file, test.expected, actual)
 		} else {
-				t.Logf("Test %s expected %d, found %d", test.file, test.expected, actual)
+			t.Logf("Test %s expected %d, found %d", test.file, test.expected, actual)
 		}
 	}
 }
