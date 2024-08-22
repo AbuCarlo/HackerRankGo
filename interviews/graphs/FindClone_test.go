@@ -1,8 +1,12 @@
 package graphs
 
 import (
+	"bufio"
 	"math"
+	"os"
 	"slices"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -135,6 +139,66 @@ func TestFindCloneSamples(t *testing.T) {
 			t.Errorf("Test %d expected %d, found %d", i, test.expected, actual)
 		} else {
 			t.Logf("Test %d expected %d, found %d", i, test.expected, actual)
+		}
+	}
+}
+
+func loadTestCase(t *testing.T, file string) (*ColoredGraph, int64) {
+	t.Logf("Opening %s", file)
+	inputFile, err := os.Open(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer inputFile.Close()
+
+	scanner := bufio.NewScanner(inputFile)
+	scanner.Scan()
+	
+    graphNodesEdges := strings.Split(scanner.Text(), " ")
+    order, _ := strconv.ParseInt(graphNodesEdges[0], 10, 32)
+    size, _ := strconv.ParseInt(graphNodesEdges[1], 10, 32)
+
+	t.Logf("Order: %d, size: %d", order, size)
+
+	g := NewColoredGraph(int32(order))
+
+	for range int(size) {
+		scanner.Scan()
+		edge := strings.Split(scanner.Text(), " ")
+		u, _ := strconv.ParseInt(edge[0], 10, 32)
+		v, _ := strconv.ParseInt(edge[1], 10, 32)
+		g.AddEdge(int32(u), int32(v))
+	}
+
+	scanner.Scan()
+	colors := []int64{}
+	for _, s := range strings.Split(scanner.Text(), " ") {
+		color, _ := strconv.ParseInt(s, 10, 32)
+		colors = append(colors, color)
+	}
+
+	g.Color(colors...)
+
+	scanner.Scan()
+	value, _ := strconv.ParseInt(scanner.Text(), 10, 32)
+
+	return g, value
+}
+
+func TestFindCloneFiles(t *testing.T) {
+	// Benchmark?
+	directory := "./find-clone-inputs"
+	testCases := []struct{ file string; expected int64 }{
+		{ "input04.txt", -1 },
+		{ "input05.txt", -1 },
+	}
+	for _, test := range testCases {
+		g, color := loadTestCase(t, directory + "/" + test.file)
+		actual := g.FindClone(color)
+		if actual != test.expected {
+			t.Errorf("Test %s expected %d, found %d", test.file, test.expected, actual)
+		} else {
+				t.Logf("Test %s expected %d, found %d", test.file, test.expected, actual)
 		}
 	}
 }
