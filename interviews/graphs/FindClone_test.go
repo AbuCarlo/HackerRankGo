@@ -37,6 +37,11 @@ func (g *ColoredGraph) Color(v int32, color int32) {
 }
 
 func (g *ColoredGraph) FindClone(color int32) int32 {
+
+	if !g.IsConnected(color) {
+		return -1
+	}
+
 	distances := g.FloydWarshall()
 	result := int64(math.MaxInt64)
 	for u := int32(1); u <= g.order; u++ {
@@ -54,6 +59,62 @@ func (g *ColoredGraph) FindClone(color int32) int32 {
 		return -1
 	}
 	return int32(result)
+}
+
+func findRoot(parents map[int32]int32, v int32) int32 {
+	parent := parents[v]
+	// Follow the path to the root, compressing all the while.
+	// See https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Finding_set_representatives
+	for parent != parents[parent] {
+		parent, parents[parent] = parents[parent], parents[parents[parent]]
+	}
+
+	return parent
+}
+
+func (g *ColoredGraph) IsConnected(color int32) bool {
+
+	type _DisjointSets map[int32]*Set[int32]
+
+	parents := make(map[int32]int32)
+	disjoints := make(_DisjointSets)
+
+	for v := int32(1); v <= g.order; v++ {
+		parents[v] = v
+		disjoints[v] = NewSet[int32]()
+		disjoints[v].Add(v)
+	}
+
+	// Now give each subgraph its adjacency matrix.
+	for u, s := range g.adjacency {
+		for _, v := range s.Items() {
+			x := findRoot(parents, u)
+			y := findRoot(parents, v)
+			if x == y {
+				continue
+			}
+			if disjoints[x].Size() < disjoints[y].Size() {
+				x, y = y, x
+			}
+			parents[y] = x
+			disjoints[x].Union(disjoints[y])
+			delete(disjoints, y)
+		}
+	}
+
+	for _, s := range disjoints {
+		count := 0
+		for _, v := range s.Items() {
+			if g.colors[v] == color {
+				count++
+				if count == 2 {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
 }
 
 func (g *ColoredGraph) FloydWarshall() [][]int64 {
@@ -187,8 +248,8 @@ func TestFindCloneFiles(t *testing.T) {
 	
 	testCases := []struct{ file string; expected int32 }{
 		{ "input02.txt", -1 },
-		// { "input04.txt", -1 },
-		// { "input05.txt", -1 },
+		{ "input04.txt", -1 },
+		{ "input05.txt", -1 },
 	}
 	for _, test := range testCases {
 		g, color := loadTestCase(directory + "/" + test.file)
