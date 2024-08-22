@@ -185,8 +185,9 @@ func TestFindCloneFiles(t *testing.T) {
 	// Benchmark?
 	
 	testCases := []struct{ file string; expected int64 }{
-		{ "input04.txt", -1 },
-		{ "input05.txt", -1 },
+		{ "input02.txt", -1 },
+		// { "input04.txt", -1 },
+		// { "input05.txt", -1 },
 	}
 	for _, test := range testCases {
 		g, color := loadTestCase(directory + "/" + test.file)
