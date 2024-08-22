@@ -19,14 +19,13 @@ func NewColoredGraph(order int32) *ColoredGraph {
 }
 
 func (g *ColoredGraph) AddEdge(u, v int32) {
+	if u < v {
+		u, v = v, u
+	}
 	if _, ok := g.adjacency[u]; !ok {
 		g.adjacency[u] = NewSet[int32]()
 	}
-	if _, ok := g.adjacency[v]; !ok {
-		g.adjacency[v] = NewSet[int32]()
-	}
 	g.adjacency[u].Add(v)
-	g.adjacency[v].Add(u)
 }
 
 func (g *ColoredGraph) Color(colors... int64) {
@@ -65,17 +64,13 @@ func (g *ColoredGraph) FloydWarshall() [][]int64 {
 	for i := 1; i <= int(g.order); i++ {
 		distances[i] = slices.Clone(pattern[:i + 1])
 	}
-	for v, a := range g.adjacency {
-		distances[v][v] = 0
+	for u, a := range g.adjacency {
+		distances[u][u] = 0
 		if a == nil {
 			continue
 		}
-		for _, u := range a.Items() {
-			if u < v {
-				distances[v][u] = 1
-			} else {
-				distances[u][v] = 1
-			}
+		for _, v := range a.Items() {
+			distances[u][v] = 1
 		}
 	}
 	// Cut this in half.
@@ -124,11 +119,13 @@ func TestFindCloneSamples(t *testing.T) {
 		clone int32
 		expected int32
 	}{
-		// free samples
+		// Sample 0, Test Case 0
 		{ 4, []int32{1, 1, 2}, []int32{2, 3, 4}, []int64{1, 2, 1, 1 }, 1, 1 },
+		// Sample 1, Test Case 1
 		{ 4, []int32{1, 1, 4}, []int32{2, 3, 2}, []int64{1, 2, 3, 4}, 2, -1 },
+		// Sample 2
 		{ 5, []int32{1, 1, 2, 3}, []int32{2, 3, 4, 5}, []int64{1, 2, 3, 3, 2}, 2, 3 },
-		// Test Case 1
+		// Test Case 2
 	}
 
 	for i, test := range testCases {
