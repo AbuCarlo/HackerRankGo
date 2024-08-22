@@ -14,11 +14,11 @@ type ColoredGraph struct {
 	order int32
 	adjacency map[int32]*Set[int32]
 	// This seems insane.
-	colors []int64
+	colors []int32
 }
 
 func NewColoredGraph(order int32) *ColoredGraph {
-	g := ColoredGraph{order, make(map[int32]*Set[int32]), make([]int64, order + 1)}
+	g := ColoredGraph{order, make(map[int32]*Set[int32]), make([]int32, order + 1)}
 	return &g
 }
 
@@ -32,11 +32,11 @@ func (g *ColoredGraph) AddEdge(u, v int32) {
 	g.adjacency[u].Add(v)
 }
 
-func (g *ColoredGraph) Color(v int32, color int64) {
+func (g *ColoredGraph) Color(v int32, color int32) {
 	g.colors[int(v)] = color
 }
 
-func (g *ColoredGraph) FindClone(color int64) int64 {
+func (g *ColoredGraph) FindClone(color int32) int32 {
 	distances := g.FloydWarshall()
 	result := int64(math.MaxInt64)
 	for u := int32(1); u <= g.order; u++ {
@@ -53,7 +53,7 @@ func (g *ColoredGraph) FindClone(color int64) int64 {
 	if result == math.MaxInt64 {
 		return -1
 	}
-	return result
+	return int32(result)
 }
 
 func (g *ColoredGraph) FloydWarshall() [][]int64 {
@@ -104,14 +104,15 @@ func ConstructTestCase(order int32, from []int32, to []int32, colors []int64) *C
 		g.AddEdge(u, to[j])
 	}
 	for i, color := range colors {
-		g.Color(int32(i + 1), color)
+		g.Color(int32(i + 1), int32(color))
 	}
 	return g
 }
 
 func findShortest(graphNodes int32, graphFrom []int32, graphTo []int32, ids []int64, val int32) int32 {
+
     g := ConstructTestCase(graphNodes, graphFrom, graphTo, ids)
-	return int32(g.FindClone(int64(val)))
+	return int32(g.FindClone(val))
 }
 
 func TestFindCloneSamples(t *testing.T) {
@@ -134,8 +135,8 @@ func TestFindCloneSamples(t *testing.T) {
 
 	for i, test := range testCases {
 		g := ConstructTestCase(test.order, test.from, test.to, test.colors)
-		actual := g.FindClone(int64(test.clone))
-		if actual != int64(test.expected) {
+		actual := g.FindClone(test.clone)
+		if actual != test.expected {
 			t.Errorf("Test %d expected %d, found %d", i, test.expected, actual)
 		} else {
 			t.Logf("Test %d expected %d, found %d", i, test.expected, actual)
@@ -143,7 +144,7 @@ func TestFindCloneSamples(t *testing.T) {
 	}
 }
 
-func loadTestCase(file string) (*ColoredGraph, int64) {
+func loadTestCase(file string) (*ColoredGraph, int32) {
 	inputFile, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -170,13 +171,13 @@ func loadTestCase(file string) (*ColoredGraph, int64) {
 	scanner.Scan()
 	for i, s := range strings.Split(scanner.Text(), " ") {
 		color, _ := strconv.ParseInt(s, 10, 32)
-		g.Color(int32(i + 1), color)
+		g.Color(int32(i + 1), int32(color))
 	}
 
 	scanner.Scan()
 	value, _ := strconv.ParseInt(scanner.Text(), 10, 32)
 
-	return g, value
+	return g, int32(value)
 }
 
 var directory = "./find-clone-inputs"
@@ -184,7 +185,7 @@ var directory = "./find-clone-inputs"
 func TestFindCloneFiles(t *testing.T) {
 	// Benchmark?
 	
-	testCases := []struct{ file string; expected int64 }{
+	testCases := []struct{ file string; expected int32 }{
 		{ "input02.txt", -1 },
 		// { "input04.txt", -1 },
 		// { "input05.txt", -1 },
