@@ -1,5 +1,7 @@
 package graphs
 
+import "maps"
+
 type Set[V comparable] struct {
 	m map[V]struct{}
 }
@@ -38,6 +40,11 @@ func (s *Set[V]) Items() []V {
 		items = append(items, v)
 	}
 	return items
+}
+
+func (s *Set[V]) Clone() *Set[V] {
+	m := maps.Clone(s.m)
+	return &Set[V]{m}
 }
 
 func NewSet[V comparable]() *Set[V] {
