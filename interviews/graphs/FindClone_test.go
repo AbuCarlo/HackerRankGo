@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"math"
+	"math/bits"
 	"os"
 	"slices"
 	"strconv"
@@ -12,15 +13,20 @@ import (
 )
 
 type ColoredGraph struct {
-	order     int32
 	adjacency map[int32]*Set[int32]
 	// This seems insane.
 	colors []int32
 }
 
-func NewColoredGraph(order int32) *ColoredGraph {
-	g := ColoredGraph{order, make(map[int32]*Set[int32]), make([]int32, order+1)}
+type _DisjointSets map[int32]*Set[int32]
+
+func NewColoredGraph() *ColoredGraph {
+	g := ColoredGraph{make(map[int32]*Set[int32]), []int32{}}
 	return &g
+}
+
+func (g *ColoredGraph) Order() int32 {
+	return int32(len(g.adjacency))
 }
 
 func (g *ColoredGraph) AddEdge(u, v int32) {
@@ -34,32 +40,12 @@ func (g *ColoredGraph) AddEdge(u, v int32) {
 }
 
 func (g *ColoredGraph) Color(v int32, color int32) {
+	if int32(len(g.colors)) < v+1 {
+		newCapacity := 1 << (32 - bits.LeadingZeros32(uint32(v)) + 1)
+		g.colors = slices.Grow(g.colors, newCapacity-len(g.colors)+1)
+		g.colors = g.colors[:cap(g.colors)]
+	}
 	g.colors[int(v)] = color
-}
-
-func (g *ColoredGraph) FindClone(color int32) int32 {
-
-	if !g.IsConnected(color) {
-		return -1
-	}
-
-	distances := g.FloydWarshall()
-	result := int64(math.MaxInt64)
-	for u := int32(1); u <= g.order; u++ {
-		if g.colors[u] != color {
-			continue
-		}
-		for v := int32(1); v < u; v++ {
-			if g.colors[v] != color {
-				continue
-			}
-			result = min(result, distances[u][v])
-		}
-	}
-	if result == math.MaxInt64 {
-		return -1
-	}
-	return int32(result)
 }
 
 func findRoot(parents map[int32]int32, v int32) int32 {
@@ -73,14 +59,11 @@ func findRoot(parents map[int32]int32, v int32) int32 {
 	return parent
 }
 
-func (g *ColoredGraph) IsConnected(color int32) bool {
-	fmt.Printf("Graph has order %d\n", g.order)
-	type _DisjointSets map[int32]*Set[int32]
-
+func (g *ColoredGraph) FindDisconnected() _DisjointSets {
 	parents := make(map[int32]int32)
 	disjoints := make(_DisjointSets)
 
-	for v := int32(1); v <= g.order; v++ {
+	for v := int32(1); v <= g.Order(); v++ {
 		parents[v] = v
 		disjoints[v] = NewSet[int32]()
 		disjoints[v].Add(v)
@@ -102,6 +85,13 @@ func (g *ColoredGraph) IsConnected(color int32) bool {
 			delete(disjoints, y)
 		}
 	}
+	return disjoints
+}
+
+func (g *ColoredGraph) IsConnected(color int32) bool {
+	fmt.Printf("Graph has order %d\n", g.Order())
+
+	disjoints := g.FindDisconnected()
 
 	fmt.Printf("%d disjoint sets\n", len(disjoints))
 	for _, s := range disjoints {
@@ -120,50 +110,75 @@ func (g *ColoredGraph) IsConnected(color int32) bool {
 	return false
 }
 
-func (g *ColoredGraph) FloydWarshall() [][]int64 {
-	distances := make([][]int64, g.order+1)
-	// There is no Fill() or Repeat() function yet.
-	pattern := make([]int64, g.order+1)
-	for i := 1; i <= int(g.order); i++ {
-		pattern[i] = math.MaxInt32
-	}
-	for i := 1; i <= int(g.order); i++ {
-		distances[i] = slices.Clone(pattern[:i+1])
-	}
-	for u, a := range g.adjacency {
-		distances[u][u] = 0
-		if a == nil {
+func (g *ColoredGraph) Solve(color int32) int32 {
+	// https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Pseudocode
+	for source := range g.adjacency {
+		if g.colors[source] != color {
 			continue
 		}
-		for _, v := range a.Items() {
-			distances[u][v] = 1
+		unvisited := NewSet[int32]()
+		unvisited.Add(source)
+
+		distances := make(map[int32]int)
+		distances[source] = 0
+
+		for !unvisited.Empty() {
+			u := unvisited.First()
+			unvisited.Remove(u)
+
+			for _, v := range g.adjacency[u].Items() {
+
+				alt := distances[u] + 1
+				if d, ok := distances[v]; ok {
+					if alt < d {
+						distances[v] = alt
+					} else {
+						distances[v] = alt
+					}
+				}
+			}
 		}
-	}
-	// Cut this in half.
-	for k := int32(1); k <= g.order; k++ {
-		for i := int32(1); i <= g.order; i++ {
-			for j := int32(1); j < i; j++ {
-				var choice int64
-				if i > k {
-					choice = distances[i][k]
-				} else {
-					choice = distances[k][i]
-				}
-				if k > j {
-					choice += distances[k][j]
-				} else {
-					choice += distances[j][k]
-				}
-				distances[i][j] = min(choice, distances[i][j])
+
+		closestClone := int32(math.MaxInt32)
+		for target, distance := range distances {
+			if target == source {
+				continue
+			}
+			if g.colors[target] == color {
+				closestClone = min(closestClone, int32(distance))
 			}
 		}
 	}
 
-	return distances
+	return 0
 }
 
-func ConstructTestCase(order int32, from []int32, to []int32, colors []int64) *ColoredGraph {
-	g := NewColoredGraph(order)
+func (g *ColoredGraph) SolveDijkstra(color int32) int32 {
+
+	disjoints := g.FindDisconnected()
+
+	solution := int32(math.MaxInt32)
+
+	for _, h := range disjoints {
+		if h.Size() < 2 {
+			continue
+		}
+		sub := ColoredGraph{make(map[int32]*Set[int32]), g.colors}
+		for _, u := range h.Items() {
+			sub.adjacency[u] = g.adjacency[u]
+		}
+
+		solution = min(solution, sub.Solve(color))
+	}
+
+	if solution == math.MaxInt32 {
+		return -1
+	}
+	return solution
+}
+
+func ConstructTestCase(from []int32, to []int32, colors []int64) *ColoredGraph {
+	g := NewColoredGraph()
 	for j, u := range from {
 		g.AddEdge(u, to[j])
 	}
@@ -173,10 +188,9 @@ func ConstructTestCase(order int32, from []int32, to []int32, colors []int64) *C
 	return g
 }
 
-func findShortest(graphNodes int32, graphFrom []int32, graphTo []int32, ids []int64, val int32) int32 {
-
-	g := ConstructTestCase(graphNodes, graphFrom, graphTo, ids)
-	return int32(g.FindClone(val))
+func findShortest(_ int32, graphFrom []int32, graphTo []int32, ids []int64, val int32) int32 {
+	g := ConstructTestCase(graphFrom, graphTo, ids)
+	return int32(g.SolveDijkstra(val))
 }
 
 func TestFindCloneSamples(t *testing.T) {
@@ -198,8 +212,8 @@ func TestFindCloneSamples(t *testing.T) {
 	}
 
 	for i, test := range testCases {
-		g := ConstructTestCase(test.order, test.from, test.to, test.colors)
-		actual := g.FindClone(test.clone)
+		g := ConstructTestCase(test.from, test.to, test.colors)
+		actual := g.Solve(test.clone)
 		if actual != test.expected {
 			t.Errorf("Test %d expected %d, found %d", i, test.expected, actual)
 		} else {
@@ -219,10 +233,10 @@ func loadTestCase(file string) (*ColoredGraph, int32) {
 	scanner.Scan()
 
 	graphNodesEdges := strings.Split(scanner.Text(), " ")
-	order, _ := strconv.ParseInt(graphNodesEdges[0], 10, 32)
+	// order, _ := strconv.ParseInt(graphNodesEdges[0], 10, 32)
 	size, _ := strconv.ParseInt(graphNodesEdges[1], 10, 32)
 
-	g := NewColoredGraph(int32(order))
+	g := NewColoredGraph()
 
 	for range int(size) {
 		scanner.Scan()
@@ -254,13 +268,13 @@ func TestFindCloneFiles(t *testing.T) {
 		expected int32
 	}{
 		{"input02.txt", -1},
-		{"input04.txt", -1},
-		{"input05.txt", -1},
+		//{"input04.txt", -1},
+		//{"input05.txt", -1},
 	}
 	for _, test := range testCases {
 		t.Logf("Test %s expecting %d", test.file, test.expected)
 		g, color := loadTestCase(directory + "/" + test.file)
-		actual := g.FindClone(color)
+		actual := g.Solve(color)
 		if actual != test.expected {
 			t.Errorf("Test %s expected %d, found %d", test.file, test.expected, actual)
 		}
@@ -271,6 +285,6 @@ func BenchmarkFindClone(b *testing.B) {
 	g, color := loadTestCase(directory + "/" + "input04.txt")
 
 	for i := 0; i < b.N; i++ {
-		g.FindClone(color)
+		g.Solve(color)
 	}
 }

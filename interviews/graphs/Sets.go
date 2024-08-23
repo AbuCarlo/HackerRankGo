@@ -47,6 +47,19 @@ func (s *Set[V]) Clone() *Set[V] {
 	return &Set[V]{m}
 }
 
+func (s *Set[V]) Empty() bool {
+	return len(s.m) == 0
+}
+
+func (s *Set[V]) First() V {
+	var k V
+	for value := range s.m {
+		k = value 
+		break
+	}
+	return k
+}
+
 func NewSet[V comparable]() *Set[V] {
 	s := Set[V]{}
 	s.m = make(map[V]struct{})
