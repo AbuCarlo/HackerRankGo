@@ -48,13 +48,9 @@ func FindRoot(parents map[int32]int32, v int32) int32 {
 }
 
 func (g *UndirectedGraph) FindDisconnected() []UndirectedGraph {
-	// To get distinct values in a slice:
-	// https://stackoverflow.com/a/76471309/476942
-	// To get a map's keys as a slice, see
-	// https://stackoverflow.com/a/69889828/476942
-	// I don't want to exploit any of these options here,
-	// in case HackerRank doesn't let me.
 	// See mainly https://en.wikipedia.org/wiki/Kruskal%27s_algorithm
+	// I could have skipped a lot of this, since this algorithm
+	// "finds a minimum spanning forest of an undirected" graph.
 	parents := make(map[int32]int32)
 	disjoints := make(DisjointSets)
 
