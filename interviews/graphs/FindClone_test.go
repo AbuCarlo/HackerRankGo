@@ -2,7 +2,6 @@ package graphs
 
 import (
 	"bufio"
-	"fmt"
 	"math"
 	"math/bits"
 	"os"
@@ -30,13 +29,14 @@ func (g *ColoredGraph) Order() int32 {
 }
 
 func (g *ColoredGraph) AddEdge(u, v int32) {
-	if u < v {
-		u, v = v, u
-	}
 	if _, ok := g.adjacency[u]; !ok {
 		g.adjacency[u] = NewSet[int32]()
 	}
 	g.adjacency[u].Add(v)
+	if _, ok := g.adjacency[v]; !ok {
+		g.adjacency[v] = NewSet[int32]()
+	}
+	g.adjacency[v].Add(u)
 }
 
 func (g *ColoredGraph) Color(v int32, color int32) {
@@ -88,58 +88,60 @@ func (g *ColoredGraph) FindDisconnected() _DisjointSets {
 	return disjoints
 }
 
-func (g *ColoredGraph) IsConnected(color int32) bool {
-	fmt.Printf("Graph has order %d\n", g.Order())
-
-	disjoints := g.FindDisconnected()
-
-	fmt.Printf("%d disjoint sets\n", len(disjoints))
-	for _, s := range disjoints {
-		fmt.Printf("Disjoint set of size %d\n", s.Size())
-		count := 0
-		for _, v := range s.Items() {
-			if g.colors[v] == color {
-				count++
-				if count == 2 {
-					return true
-				}
-			}
+func (g *ColoredGraph) Solve(color int32) int32 {
+	countColored := 0
+	for u := range g.adjacency {
+		if g.colors[u] == color {
+			countColored++
 		}
 	}
+	if countColored < 2 {
+		return -1
+	}
 
-	return false
-}
-
-func (g *ColoredGraph) Solve(color int32) int32 {
+	closestClone := int32(math.MaxInt32)
+	// Test how many colored nodes there are.
 	// https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Pseudocode
 	for source := range g.adjacency {
 		if g.colors[source] != color {
 			continue
 		}
-		unvisited := NewSet[int32]()
-		unvisited.Add(source)
+
+		visited := NewSet[int32]()
+		q := []int32{source}
 
 		distances := make(map[int32]int)
 		distances[source] = 0
 
-		for !unvisited.Empty() {
-			u := unvisited.First()
-			unvisited.Remove(u)
+		u := source
+
+		for {
+
+			visited.Add(u)
+
+			q = q[1:]
 
 			for _, v := range g.adjacency[u].Items() {
-
+				if visited.Has(v) {
+					continue
+				}
+				q = append(q, v)
 				alt := distances[u] + 1
 				if d, ok := distances[v]; ok {
 					if alt < d {
 						distances[v] = alt
-					} else {
-						distances[v] = alt
 					}
+				} else {
+					distances[v] = alt
 				}
 			}
+
+			if len(q) == 0 {
+				break
+			}
+			u = q[0]
 		}
 
-		closestClone := int32(math.MaxInt32)
 		for target, distance := range distances {
 			if target == source {
 				continue
@@ -150,7 +152,10 @@ func (g *ColoredGraph) Solve(color int32) int32 {
 		}
 	}
 
-	return 0
+	if closestClone == math.MaxInt32 {
+		return -1
+	}
+	return closestClone
 }
 
 func (g *ColoredGraph) SolveDijkstra(color int32) int32 {
@@ -217,7 +222,7 @@ func TestFindCloneSamples(t *testing.T) {
 		if actual != test.expected {
 			t.Errorf("Test %d expected %d, found %d", i, test.expected, actual)
 		} else {
-			t.Logf("Test %d expected %d, found %d", i, test.expected, actual)
+			t.Logf("Test %d expected %d", i, test.expected)
 		}
 	}
 }
