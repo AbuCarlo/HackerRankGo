@@ -276,6 +276,7 @@ func TestFindCloneFiles(t *testing.T) {
 		{"input04.txt", -1},
 		{"input05.txt", -1},
 		{"input06.txt", -1},
+		{"input07.txt", -1},
 	}
 	for _, test := range testCases {
 		t.Logf("Test %s expecting %d", test.file, test.expected)
