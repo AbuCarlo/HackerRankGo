@@ -7,7 +7,6 @@ import (
 	"os"
 	"slices"
 	"strconv"
-	"strings"
 	"testing"
 )
 
@@ -63,7 +62,7 @@ func (g *ColoredGraph) FindDisconnected() _DisjointSets {
 	parents := make(map[int32]int32)
 	disjoints := make(_DisjointSets)
 
-	for v := int32(1); v <= g.Order(); v++ {
+	for v := range g.adjacency {
 		parents[v] = v
 		disjoints[v] = NewSet[int32]()
 		disjoints[v].Add(v)
@@ -235,26 +234,27 @@ func loadTestCase(file string) (*ColoredGraph, int32) {
 	defer inputFile.Close()
 
 	scanner := bufio.NewScanner(inputFile)
-	scanner.Scan()
+	scanner.Split(bufio.ScanWords)
 
-	graphNodesEdges := strings.Split(scanner.Text(), " ")
-	// order, _ := strconv.ParseInt(graphNodesEdges[0], 10, 32)
-	size, _ := strconv.ParseInt(graphNodesEdges[1], 10, 32)
+	scanner.Scan()
+	order, _ := strconv.ParseInt(scanner.Text(), 10, 32)
+	scanner.Scan()
+	size, _ := strconv.ParseInt(scanner.Text(), 10, 32)
 
 	g := NewColoredGraph()
 
 	for range int(size) {
 		scanner.Scan()
-		edge := strings.Split(scanner.Text(), " ")
-		u, _ := strconv.ParseInt(edge[0], 10, 32)
-		v, _ := strconv.ParseInt(edge[1], 10, 32)
+		u, _ := strconv.ParseInt(scanner.Text(), 10, 32)
+		scanner.Scan()
+		v, _ := strconv.ParseInt(scanner.Text(), 10, 32)
 		g.AddEdge(int32(u), int32(v))
 	}
 
-	scanner.Scan()
-	for i, s := range strings.Split(scanner.Text(), " ") {
-		color, _ := strconv.ParseInt(s, 10, 32)
-		g.Color(int32(i+1), int32(color))
+	for v := int32(1); v <= int32(order); v++ {
+		scanner.Scan()
+		color, _ := strconv.ParseInt(scanner.Text(), 10, 32)
+		g.Color(v, int32(color))
 	}
 
 	scanner.Scan()
@@ -266,20 +266,18 @@ func loadTestCase(file string) (*ColoredGraph, int32) {
 var directory = "./find-clone-inputs"
 
 func TestFindCloneFiles(t *testing.T) {
-	// Benchmark?
-
 	testCases := []struct {
 		file     string
 		expected int32
 	}{
 		{"input02.txt", -1},
-		//{"input04.txt", -1},
-		//{"input05.txt", -1},
+		{"input04.txt", -1},
+		{"input05.txt", -1},
 	}
 	for _, test := range testCases {
 		t.Logf("Test %s expecting %d", test.file, test.expected)
 		g, color := loadTestCase(directory + "/" + test.file)
-		actual := g.Solve(color)
+		actual := g.SolveDijkstra(color)
 		if actual != test.expected {
 			t.Errorf("Test %s expected %d, found %d", test.file, test.expected, actual)
 		}
