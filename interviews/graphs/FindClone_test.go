@@ -3,9 +3,7 @@ package graphs
 import (
 	"bufio"
 	"math"
-	"math/bits"
 	"os"
-	"slices"
 	"strconv"
 	"testing"
 )
@@ -19,7 +17,7 @@ type ColoredGraph struct {
 type _DisjointSets map[int32]*Set[int32]
 
 func NewColoredGraph() *ColoredGraph {
-	g := ColoredGraph{make(map[int32]*Set[int32]), []int32{}}
+	g := ColoredGraph{make(map[int32]*Set[int32]), make([]int32, 1 << 10)}
 	return &g
 }
 
@@ -38,11 +36,15 @@ func (g *ColoredGraph) AddEdge(u, v int32) {
 	g.adjacency[v].Add(u)
 }
 
-func (g *ColoredGraph) Color(v int32, color int32) {
+func (g *ColoredGraph) SetColor(v int32, color int32) {
 	if int32(len(g.colors)) < v+1 {
-		newCapacity := 1 << (32 - bits.LeadingZeros32(uint32(v)) + 1)
-		g.colors = slices.Grow(g.colors, newCapacity-len(g.colors)+1)
-		g.colors = g.colors[:cap(g.colors)]
+		l := len(g.colors)
+		for l < int(v + 1) {
+			l *= 2
+		}
+		tmp := make([]int32, l)
+		copy(tmp, g.colors)
+		g.colors = tmp
 	}
 	g.colors[int(v)] = color
 }
@@ -87,7 +89,7 @@ func (g *ColoredGraph) FindDisconnected() _DisjointSets {
 	return disjoints
 }
 
-func (g *ColoredGraph) Solve(color int32) int32 {
+func (g *ColoredGraph) SolveSubgraph(color int32) int32 {
 	countColored := 0
 	for u := range g.adjacency {
 		if g.colors[u] == color {
@@ -172,7 +174,7 @@ func (g *ColoredGraph) SolveDijkstra(color int32) int32 {
 			sub.adjacency[u] = g.adjacency[u]
 		}
 
-		solution = min(solution, sub.Solve(color))
+		solution = min(solution, sub.SolveSubgraph(color))
 	}
 
 	if solution == math.MaxInt32 {
@@ -187,7 +189,7 @@ func ConstructTestCase(from []int32, to []int32, colors []int64) *ColoredGraph {
 		g.AddEdge(u, to[j])
 	}
 	for i, color := range colors {
-		g.Color(int32(i+1), int32(color))
+		g.SetColor(int32(i+1), int32(color))
 	}
 	return g
 }
@@ -217,7 +219,7 @@ func TestFindCloneSamples(t *testing.T) {
 
 	for i, test := range testCases {
 		g := ConstructTestCase(test.from, test.to, test.colors)
-		actual := g.Solve(test.clone)
+		actual := g.SolveSubgraph(test.clone)
 		if actual != test.expected {
 			t.Errorf("Test %d expected %d, found %d", i, test.expected, actual)
 		} else {
@@ -254,7 +256,7 @@ func loadTestCase(file string) (*ColoredGraph, int32) {
 	for v := int32(1); v <= int32(order); v++ {
 		scanner.Scan()
 		color, _ := strconv.ParseInt(scanner.Text(), 10, 32)
-		g.Color(v, int32(color))
+		g.SetColor(v, int32(color))
 	}
 
 	scanner.Scan()
@@ -273,6 +275,7 @@ func TestFindCloneFiles(t *testing.T) {
 		{"input02.txt", -1},
 		{"input04.txt", -1},
 		{"input05.txt", -1},
+		{"input06.txt", -1},
 	}
 	for _, test := range testCases {
 		t.Logf("Test %s expecting %d", test.file, test.expected)
@@ -285,9 +288,9 @@ func TestFindCloneFiles(t *testing.T) {
 }
 
 func BenchmarkFindClone(b *testing.B) {
-	g, color := loadTestCase(directory + "/" + "input04.txt")
+	g, color := loadTestCase(directory + "/" + "input05.txt")
 
 	for i := 0; i < b.N; i++ {
-		g.Solve(color)
+		g.SolveSubgraph(color)
 	}
 }
