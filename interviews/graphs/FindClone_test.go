@@ -47,20 +47,20 @@ func (g *ColoredGraph) Color(v int32, color int32) {
 	g.colors[int(v)] = color
 }
 
-func findRoot(parents map[int32]int32, v int32) int32 {
-	parent := parents[v]
-	// Follow the path to the root, compressing all the while.
-	// See https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Finding_set_representatives
-	for parent != parents[parent] {
-		parent, parents[parent] = parents[parent], parents[parents[parent]]
-	}
-
-	return parent
-}
-
 func (g *ColoredGraph) FindDisconnected() _DisjointSets {
 	parents := make(map[int32]int32)
 	disjoints := make(_DisjointSets)
+
+	_findRoot := func (v int32) int32 {
+		parent := parents[v]
+		// Follow the path to the root, compressing all the while.
+		// See https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Finding_set_representatives
+		for parent != parents[parent] {
+			parent, parents[parent] = parents[parent], parents[parents[parent]]
+		}
+	
+		return parent
+	}
 
 	for v := range g.adjacency {
 		parents[v] = v
@@ -71,8 +71,8 @@ func (g *ColoredGraph) FindDisconnected() _DisjointSets {
 	// Now give each subgraph its adjacency matrix.
 	for u, s := range g.adjacency {
 		for _, v := range s.Items() {
-			x := findRoot(parents, u)
-			y := findRoot(parents, v)
+			x := _findRoot(u)
+			y := _findRoot(v)
 			if x == y {
 				continue
 			}
