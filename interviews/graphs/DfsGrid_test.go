@@ -1,5 +1,10 @@
 package graphs
 
+/* 
+	The problem is to find the largest disjoint set in a graph, i.e. 
+	to implemnent the "disjoint sets" algorithm with path reduction.
+*/
+
 import (
 	"bufio"
 	"strconv"

@@ -1,3 +1,6 @@
+# The problem is simply to find all the shortest paths from a particular node
+# to every other...i.e., to implement Dijkstra's algorithm.
+
 class Graph:
     def __init__(self, order):
         self.adjacency = [None] * order

@@ -1,7 +1,12 @@
 package graphs
 
 // See https://en.wikipedia.org/wiki/Disjoint-set_data_structure
-// See
+
+/* 
+	The problem is to find the minimal spanning tree of every disconnected
+	subgraph, then determine if it's cheaper to build a library on each 
+	one, or connect them by roads and build a single library.
+*/
 
 import (
 	"math/rand"
@@ -115,12 +120,6 @@ func (g *UndirectedGraph) FindDisconnected() []UndirectedGraph {
 func (g *UndirectedGraph) Insert(u, v int32) {
 	if u == v {
 		panic("u must not == v")
-	}
-	// Since it's an undirected graph, let's just
-	// decide to make the the lower vertex number
-	// the parent.
-	if u > v {
-		u, v = v, u
 	}
 
 	if _, ok := g.adjacency[v]; !ok {
