@@ -14,16 +14,15 @@ import os
 
 class Graph:
     def __init__(self, cities, machines):
-        self.adjacency = {}
+        n = max(max([e[0] for e in cities]), max([e[1] for e in cities]))
+        self.adjacency = []
+        for c in range(n + 1):
+            self.adjacency.append({})
         for (u, v, cost) in cities:
             self.connect(u, v, cost)
         self.machines = set(machines)
 
     def connect(self, u, v, cost):
-        if u not in self.adjacency:
-            self.adjacency[u] = {}
-        if v not in self.adjacency:
-            self.adjacency[v] = {}
         self.adjacency[u][v] = cost
         self.adjacency[v][u] = cost
         
