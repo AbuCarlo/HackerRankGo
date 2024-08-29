@@ -9,18 +9,18 @@
 # machines would still be connected to each other.
 
 import heapq
-import os
+import sys
 
 
 class Graph:
     def __init__(self, cities, machines):
-        n = max(max([e[0] for e in cities]), max([e[1] for e in cities]))
+        self.order = max(max([e[0] for e in cities]), max([e[1] for e in cities])) + 1
         self.adjacency = []
-        for c in range(n + 1):
+        for c in range(self.order):
             self.adjacency.append({})
         for (u, v, cost) in cities:
             self.connect(u, v, cost)
-        self.machines = set(machines)
+        self.machines = machines
 
     def connect(self, u, v, cost):
         self.adjacency[u][v] = cost
@@ -32,7 +32,7 @@ class Graph:
         
     def find_shortest_paths(self, source):
         queue = []
-        distances = {}
+        distances = [sys.maxsize] * self.order
         previous = {}
         visited = set()
         
@@ -44,18 +44,15 @@ class Graph:
         heapq.heappush(queue, (0, source))
 
         while queue and targets:
-            _, u = heapq.heappop(queue)
+            d, u = heapq.heappop(queue)
             if u in targets:
                 targets.remove(u)
                 found.append(u)
             for v in self.adjacency[u]:
                 if v in visited:
                     continue
-                alt = distances[u] + self.adjacency[u][v]
-                if v not in distances:
-                    distances[v] = alt
-                    previous[v] = u
-                elif distances[v] > alt:
+                alt = d + self.adjacency[u][v]
+                if distances[v] > alt:
                     distances[v] = alt
                     previous[v] = u
                 heapq.heappush(queue, (distances[v], v))
