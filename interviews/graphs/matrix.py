@@ -79,14 +79,14 @@ def minTime(roads, machines) -> int:
     result = 0
     for machine in machines:
         paths = graph.find_shortest_paths(machine)
-        print(f'Machine {machine} is connected to {paths}')
+        # print(f'Machine {machine} is connected to {paths}')
         cheapest_edges = set()
         for path in paths:
             # What is the lowest-cost edge on this path?
             edges = [(path[i - 1], path[i]) for i in range(1, len(path))]
             cheapest = min(edges, key = lambda e: graph.adjacency[e[0]][e[1]])
             cheapest_edges.add(cheapest if cheapest[0] < cheapest[1] else (cheapest[1], cheapest[0]))
-        print(f'The edges to delete are {cheapest_edges}')
+        # print(f'The edges to delete are {cheapest_edges}')
         costs = [graph.adjacency[u][v] for u, v in cheapest_edges]
         result += sum(costs)
         for u, v in cheapest_edges:
