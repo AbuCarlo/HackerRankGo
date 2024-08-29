@@ -62,18 +62,31 @@ class Graph:
         while v != source:
             path = [v] + path
             v = previous[v]
-        return path
+        return [source] + path
     
-def minTime(roads, machines):
+def minTime(roads, machines) -> int:
     graph = Graph(roads)
+    cheapest_edges = []
     for machine in machines:
-        for other_machine in [m for m in machines if m != machine]:
+        for other_machine in [m for m in machines if m > machine]:
             previous = graph.find_shortest_path(machine, other_machine)
             # What is the lowest-cost edge on this path?
             edges = [(previous[i - 1], previous[i]) for i in range(1, len(previous))]
-            print(edges)
+            cheapest = min(edges, key = lambda e: graph.adjacency[e[0]][e[1]])
+            if cheapest[0] > cheapest[1]:
+                cheapest = (cheapest[1], cheapest[0])
+            cheapest_edges.append(cheapest)
+    s = set(cheapest_edges)
+    costs = [graph.adjacency[u][v] for u, v in s]
+    result = sum(costs)
+    return result
 
 
 # Sample 0
-minTime([[2, 1, 8], [1, 0, 5], [2, 4, 5], [1, 3, 4]], [2, 4, 0])
+result0 = minTime([[2, 1, 8], [1, 0, 5], [2, 4, 5], [1, 3, 4]], [2, 4, 0])
+# Sample 1
+result1 = minTime([[0, 1, 4], [1, 2, 3], [1, 3, 7], [0, 4, 2]], [2, 3, 4])
+# Sample 2
+result2 = minTime([[0, 3, 3], [1, 4, 4], [1, 3, 4], [0, 2, 5]], [1, 3, 4])
 
+print(result0, result1, result2)
