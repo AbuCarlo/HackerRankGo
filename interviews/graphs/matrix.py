@@ -13,10 +13,11 @@ import os
 
 
 class Graph:
-    def __init__(self, cities):
+    def __init__(self, cities, machines):
         self.adjacency = {}
         for (u, v, cost) in cities:
             self.connect(u, v, cost)
+        self.machines = set(machines)
 
     def connect(self, u, v, cost):
         if u not in self.adjacency:
@@ -27,22 +28,27 @@ class Graph:
         self.adjacency[v][u] = cost
         
     def disconnect(self, u, v):
-        del(self.adjacency[v], u)
-        del(self.adjacency[u], v)
+        del self.adjacency[v][u]
+        del self.adjacency[u][v]
         
-    def find_shortest_path(self, source, target):
+    def find_shortest_paths(self, source):
         queue = []
         distances = {}
         previous = {}
         visited = set()
         
+        targets = set(self.machines)
+        targets.remove(source)
+        found = []
+        
         distances[source] = 0
         heapq.heappush(queue, (0, source))
 
-        while queue:
+        while queue and targets:
             _, u = heapq.heappop(queue)
-            if u == target:
-                break
+            if u in targets:
+                targets.remove(u)
+                found.append(u)
             for v in self.adjacency[u]:
                 if v in visited:
                     continue
@@ -57,32 +63,39 @@ class Graph:
                 
             visited.add(u)
 
-        v = target
-        path = []
-        while v != source:
-            path = [v] + path
-            v = previous[v]
-        return [source] + path
+        paths = []
+        for target in found:
+            v = target
+            path = []
+            while v != source:
+                path = [v] + path
+                v = previous[v]
+            paths.append([source] + path)
+            
+        return paths
     
 def minTime(roads, machines) -> int:
-    graph = Graph(roads)
-    cheapest_edges = []
+    graph = Graph(roads, machines)
+    result = 0
     for machine in machines:
-        for other_machine in [m for m in machines if m > machine]:
-            previous = graph.find_shortest_path(machine, other_machine)
+        paths = graph.find_shortest_paths(machine)
+        print(f'Machine {machine} is connected to {paths}')
+        cheapest_edges = set()
+        for path in paths:
             # What is the lowest-cost edge on this path?
-            edges = [(previous[i - 1], previous[i]) for i in range(1, len(previous))]
+            edges = [(path[i - 1], path[i]) for i in range(1, len(path))]
             cheapest = min(edges, key = lambda e: graph.adjacency[e[0]][e[1]])
-            if cheapest[0] > cheapest[1]:
-                cheapest = (cheapest[1], cheapest[0])
-            cheapest_edges.append(cheapest)
-    s = set(cheapest_edges)
-    costs = [graph.adjacency[u][v] for u, v in s]
-    result = sum(costs)
+            cheapest_edges.add(cheapest if cheapest[0] < cheapest[1] else (cheapest[1], cheapest[0]))
+        print(f'The edges to delete are {cheapest_edges}')
+        costs = [graph.adjacency[u][v] for u, v in cheapest_edges]
+        result += sum(costs)
+        for u, v in cheapest_edges:
+            graph.disconnect(u, v)
+            
     return result
 
 
-# Sample 0
+# Sample 0 / Test Case 0
 result0 = minTime([[2, 1, 8], [1, 0, 5], [2, 4, 5], [1, 3, 4]], [2, 4, 0])
 # Sample 1
 result1 = minTime([[0, 1, 4], [1, 2, 3], [1, 3, 7], [0, 4, 2]], [2, 3, 4])
