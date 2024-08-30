@@ -47,6 +47,10 @@ class Graph:
             if u in targets:
                 targets.remove(u)
                 found.append(u)
+                # A path from source can't go through a city
+                # to another city; the first part of the path
+                # will be broken.
+                continue
             for v in self.adjacency[u]:
                 if v in visited:
                     continue
