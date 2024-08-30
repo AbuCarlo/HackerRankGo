@@ -10,7 +10,7 @@
 
 import heapq
 import sys
-
+import time
 
 class Graph:
     def __init__(self, cities, machines):
@@ -90,6 +90,7 @@ def minTime(roads, machines) -> int:
             
     return result
 
+time_start = time.perf_counter()
 
 # Sample 0 / Test Case 0
 result0 = minTime([[2, 1, 8], [1, 0, 5], [2, 4, 5], [1, 3, 4]], [2, 4, 0])
@@ -97,5 +98,10 @@ result0 = minTime([[2, 1, 8], [1, 0, 5], [2, 4, 5], [1, 3, 4]], [2, 4, 0])
 result1 = minTime([[0, 1, 4], [1, 2, 3], [1, 3, 7], [0, 4, 2]], [2, 3, 4])
 # Sample 2
 result2 = minTime([[0, 3, 3], [1, 4, 4], [1, 3, 4], [0, 2, 5]], [1, 3, 4])
+
+time_end = time.perf_counter()
+time_duration = time_end - time_start
+
+print(f'Took {time_duration:.3f} seconds')
 
 print(result0, result1, result2)
