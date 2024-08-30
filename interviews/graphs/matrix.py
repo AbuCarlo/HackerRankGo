@@ -87,6 +87,11 @@ def minTime(roads, machines) -> int:
         result += sum(costs)
         for u, v in cheapest_edges:
             graph.disconnect(u, v)
+        # No path from another machine can go through this one,
+        # so just get rid of it.
+        # Huh: modifying the graph costs even more time.
+        # for v in list(graph.adjacency[machine]):
+        #     graph.disconnect(machine, v)
             
     return result
 
