@@ -50,6 +50,7 @@ class Graph:
                 # A path from source can't go through a city
                 # to another city; the first part of the path
                 # will be broken.
+                visited.add(u)
                 continue
             for v in self.adjacency[u]:
                 if v in visited:
