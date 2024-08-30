@@ -63,9 +63,11 @@ class Graph:
             v = target
             path = []
             while v != source:
-                path = [v] + path
+                path.append(v)
                 v = previous[v]
-            paths.append([source] + path)
+            path.append(source)
+            path.reverse()
+            paths.append(path)
             
         return paths
     
