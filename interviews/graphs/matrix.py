@@ -12,15 +12,15 @@ import heapq
 import sys
 import time
 
+
 class Graph:
-    def __init__(self, cities, machines):
+    def __init__(self, cities):
         self.order = max(max([e[0] for e in cities]), max([e[1] for e in cities])) + 1
         self.adjacency = []
         for c in range(self.order):
             self.adjacency.append({})
         for (u, v, cost) in cities:
             self.connect(u, v, cost)
-        self.machines = machines
 
     def connect(self, u, v, cost):
         self.adjacency[u][v] = cost
@@ -30,13 +30,13 @@ class Graph:
         del self.adjacency[v][u]
         del self.adjacency[u][v]
         
-    def find_shortest_paths(self, source):
+    def find_shortest_paths(self, source, targets):
         queue = []
         distances = [sys.maxsize] * self.order
         previous = {}
         visited = set()
         
-        targets = set(self.machines)
+        targets = set(targets)
         targets.remove(source)
         found = []
         
@@ -71,10 +71,10 @@ class Graph:
         return paths
     
 def minTime(roads, machines) -> int:
-    graph = Graph(roads, machines)
+    graph = Graph(roads)
     result = 0
-    for machine in machines:
-        paths = graph.find_shortest_paths(machine)
+    for i, machine in enumerate(machines):
+        paths = graph.find_shortest_paths(machine, machines[i:])
         # print(f'Machine {machine} is connected to {paths}')
         cheapest_edges = set()
         for path in paths:
@@ -90,7 +90,26 @@ def minTime(roads, machines) -> int:
             
     return result
 
-time_start = time.perf_counter()
+def load(file):
+    with open(file, "r") as f:
+        first_multiple_input = f.readline().rstrip().split()
+        n = int(first_multiple_input[0])
+        k = int(first_multiple_input[1])
+
+        roads = []
+
+        for _ in range(n - 1):
+            line = f.readline()
+            roads.append(list(map(int, line.rstrip().split())))
+
+        machines = []
+
+        for _ in range(k):
+            line = f.readline()
+            machines_item = int(line.strip())
+            machines.append(machines_item)
+            
+        return roads, machines
 
 # Sample 0 / Test Case 0
 result0 = minTime([[2, 1, 8], [1, 0, 5], [2, 4, 5], [1, 3, 4]], [2, 4, 0])
@@ -99,9 +118,13 @@ result1 = minTime([[0, 1, 4], [1, 2, 3], [1, 3, 7], [0, 4, 2]], [2, 3, 4])
 # Sample 2
 result2 = minTime([[0, 3, 3], [1, 4, 4], [1, 3, 4], [0, 2, 5]], [1, 3, 4])
 
+print(result0, result1, result2)
+# 6: 492394728
+# 5: 28453895
+benchmark_graph, benchmark_machines = load('interviews/graphs/matrix-inputs/input05.txt')
+
+time_start = time.perf_counter()
+result = minTime(benchmark_graph, benchmark_machines)
 time_end = time.perf_counter()
 time_duration = time_end - time_start
-
 print(f'Took {time_duration:.3f} seconds')
-
-print(result0, result1, result2)
