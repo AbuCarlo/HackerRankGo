@@ -36,7 +36,7 @@ class Graph:
         visited = set()
         
         targets = set(targets)
-        targets.remove(source)
+        # targets.remove(source)
         found = []
         
         distances[source] = 0
@@ -75,7 +75,7 @@ def minTime(roads, machines) -> int:
     graph = Graph(roads)
     result = 0
     for i, machine in enumerate(machines):
-        paths = graph.find_shortest_paths(machine, machines[i:])
+        paths = graph.find_shortest_paths(machine, machines[i + 1:])
         # print(f'Machine {machine} is connected to {paths}')
         cheapest_edges = set()
         for path in paths:
