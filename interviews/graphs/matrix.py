@@ -8,6 +8,7 @@
 # by both the respective paths, since those two 
 # machines would still be connected to each other.
 
+from collections import defaultdict
 import heapq
 import sys
 import time
@@ -32,7 +33,7 @@ class Graph:
         
     def find_shortest_paths(self, source, targets):
         queue = []
-        distances = [sys.maxsize] * self.order
+        distances = defaultdict(lambda: sys.maxsize)
         previous = {}
         visited = set()
         
@@ -85,13 +86,9 @@ def minTime(roads, machines) -> int:
         # print(f'The edges to delete are {cheapest_edges}')
         costs = [graph.adjacency[u][v] for u, v in cheapest_edges]
         result += sum(costs)
+        # After deduplication:
         for u, v in cheapest_edges:
             graph.disconnect(u, v)
-        # No path from another machine can go through this one,
-        # so just get rid of it.
-        # Huh: modifying the graph costs even more time.
-        # for v in list(graph.adjacency[machine]):
-        #     graph.disconnect(machine, v)
             
     return result
 
