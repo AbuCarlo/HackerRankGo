@@ -17,9 +17,7 @@ import time
 class Graph:
     def __init__(self, cities):
         self.order = max(max([e[0] for e in cities]), max([e[1] for e in cities])) + 1
-        self.adjacency = []
-        for c in range(self.order):
-            self.adjacency.append({})
+        self.adjacency = defaultdict(lambda: {})
         for (u, v, cost) in cities:
             self.connect(u, v, cost)
 
