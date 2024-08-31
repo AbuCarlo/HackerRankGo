@@ -127,7 +127,7 @@ result2 = minTime([[0, 3, 3], [1, 4, 4], [1, 3, 4], [0, 2, 5]], [1, 3, 4])
 
 print(result0, result1, result2)
 # 6: 492394728
-# 5: 28453895 @ 12s
+# 5: 28453895 @ 4s
 # 8: 3105329 @ 210s
 benchmark_graph, benchmark_machines = load('interviews/graphs/matrix-inputs/input05.txt')
 
