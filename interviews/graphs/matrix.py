@@ -29,23 +29,20 @@ class Graph:
         del self.adjacency[v][u]
         del self.adjacency[u][v]
         
-    def find_shortest_paths(self, source, targets):
+    def find_shortest_paths(self, source, machines):
         queue = []
         distances = defaultdict(lambda: sys.maxsize)
         previous = {}
         visited = set()
-        
-        targets = set(targets)
-        # targets.remove(source)
+
         found = []
         
         distances[source] = 0
         heapq.heappush(queue, (0, source))
 
-        while queue and targets:
+        while queue:
             d, u = heapq.heappop(queue)
-            if u in targets:
-                targets.remove(u)
+            if u in machines and u != source:
                 found.append(u)
                 # A path from source can't go through a city
                 # to another city; the first part of the path
@@ -79,8 +76,11 @@ class Graph:
 def minTime(roads, machines) -> int:
     graph = Graph(roads)
     result = 0
-    for i, machine in enumerate(machines):
-        paths = graph.find_shortest_paths(machine, machines[i + 1:])
+    edges_removed = 0
+    s = set(machines)
+    for machine in machines:
+        s.remove(machine)
+        paths = graph.find_shortest_paths(machine, s)
         # print(f'Machine {machine} is connected to {paths}')
         cheapest_edges = set()
         for path in paths:
@@ -92,6 +92,10 @@ def minTime(roads, machines) -> int:
         costs = [graph.adjacency[u][v] for u, v in cheapest_edges]
         result += sum(costs)
         # After deduplication:
+        edges_removed += len(cheapest_edges)
+        # print(f'Iteration {i}, machine {machine}: removed {len(cheapest_edges)} edges')
+        if edges_removed == len(machines) - 1:
+            break
         for u, v in cheapest_edges:
             graph.disconnect(u, v)
             
@@ -129,10 +133,10 @@ print(result0, result1, result2)
 # 6: 492394728
 # 5: 28453895 @ 4s
 # 8: 3105329 @ 210s
-benchmark_graph, benchmark_machines = load('interviews/graphs/matrix-inputs/input05.txt')
+benchmark_graph, benchmark_machines = load('interviews/graphs/matrix-inputs/input08.txt')
 
 time_start = time.perf_counter()
 result = minTime(benchmark_graph, benchmark_machines)
 time_end = time.perf_counter()
 time_duration = time_end - time_start
-print(f'Took {time_duration:.3f} seconds')
+print(f'Took {time_duration:.3f} seconds for result {result}')
