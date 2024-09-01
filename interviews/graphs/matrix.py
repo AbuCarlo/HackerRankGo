@@ -29,7 +29,7 @@ class Graph:
         del self.adjacency[v][u]
         del self.adjacency[u][v]
         
-    def find_shortest_paths(self, source, machines):
+    def find_shortest_paths(self, source, targets):
         queue = []
         distances = defaultdict(lambda: sys.maxsize)
         previous = {}
@@ -42,7 +42,7 @@ class Graph:
 
         while queue:
             d, u = heapq.heappop(queue)
-            if u in machines and u != source:
+            if u in targets:
                 found.append(u)
                 # A path from source can't go through a city
                 # to another city; the first part of the path
@@ -76,24 +76,21 @@ class Graph:
 def minTime(roads, machines) -> int:
     graph = Graph(roads)
     result = 0
+    # It's not clear that this is an optimization.
     edges_removed = 0
-    s = set(machines)
+    targets = set(machines)
     for machine in machines:
-        s.remove(machine)
-        paths = graph.find_shortest_paths(machine, s)
-        # print(f'Machine {machine} is connected to {paths}')
+        targets.remove(machine)
+        paths = graph.find_shortest_paths(machine, targets)
         cheapest_edges = set()
         for path in paths:
             # What is the lowest-cost edge on this path?
             edges = [(path[i - 1], path[i]) for i in range(1, len(path))]
             cheapest = min(edges, key = lambda e: graph.adjacency[e[0]][e[1]])
             cheapest_edges.add(cheapest if cheapest[0] < cheapest[1] else (cheapest[1], cheapest[0]))
-        # print(f'The edges to delete are {cheapest_edges}')
         costs = [graph.adjacency[u][v] for u, v in cheapest_edges]
         result += sum(costs)
-        # After deduplication:
         edges_removed += len(cheapest_edges)
-        # print(f'Iteration {i}, machine {machine}: removed {len(cheapest_edges)} edges')
         if edges_removed == len(machines) - 1:
             break
         for u, v in cheapest_edges:
@@ -133,7 +130,7 @@ print(result0, result1, result2)
 # 6: 492394728
 # 5: 28453895 @ 4s
 # 8: 3105329 @ 210s
-benchmark_graph, benchmark_machines = load('interviews/graphs/matrix-inputs/input08.txt')
+benchmark_graph, benchmark_machines = load('interviews/graphs/matrix-inputs/input05.txt')
 
 time_start = time.perf_counter()
 result = minTime(benchmark_graph, benchmark_machines)
