@@ -33,10 +33,9 @@ func TestTreeGeneration(t *testing.T) {
 
 		id := 1
 		c := valueGenerator.Draw(t, "c")
-		root := Node{id, c, nil, nil, c}
+		root := Node{id, c, nil, nil, 0}
 		nodes := []*Node{&root}
 		id++
-		// TODO Clean up the sums afterward, and the parent links.
 		for id < size {
 			node := nodes[0]
 			nodes = nodes[1:]
@@ -62,7 +61,11 @@ func TestTreeGeneration(t *testing.T) {
 			sum := node.Value
 			traversal = traversal[1:]
 			for i := 0; i < len(node.Children); i++ {
-				sum += node.Children[i].Sum
+				child := node.Children[i]
+				sum += child.Sum
+				if child.Parent != node {
+					t.Errorf("Node %d has child %d, but child does not point to its parent.", node.Id, child.Id)
+				}
 			}
 
 			if sum != node.Sum {
