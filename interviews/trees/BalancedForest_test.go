@@ -43,10 +43,11 @@ func Disjoint(m, n *Node) bool {
 	if m.Sum == n.Sum {
 		return true
 	}
+	// The node with the lower subtotal cannot be the ancestor.
 	if m.Sum < n.Sum {
 		m, n = n, m
 	}
-
+	// Now follow the path to the root.
 	for ; n != nil; n = n.Parent {
 		if n.Parent == m {
 			return false
