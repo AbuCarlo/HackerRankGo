@@ -193,7 +193,11 @@ func TestSamples(t *testing.T) {
 
 	tests := []Test{
 		{"input00.txt", []int{2, -1}},
-		//{"input01.txt", []int{-1, 10, 13, 5, 297}},
+		{"input01.txt", []int{-1, 10, 13, 5, 297}},
+		{"input02.txt", []int{1112, 2041, 959, -1, -1}},
+		{"input03.txt", []int{1714, 5016, 759000000000, -1, 6}},
+		{"input04.txt", []int{1357940809, 397705399909, 439044899265, 104805614260, -1}},
+		{"input05.txt", []int{24999687487500, 16217607772, 4, 0, -1}},
 		{"input06.txt", []int{19}},
 		{"input07.txt", []int{4}},
 	}
@@ -255,6 +259,10 @@ func read(path string) []*Node {
 			// Assume the input is valid; no error-checking.
 			parent, _ := strconv.ParseInt(a[0], 10, 32)
 			child, _ := strconv.ParseInt(a[1], 10, 32)
+			// TODO: Can I cheat?
+			if parent > child {
+				parent, child = child, parent
+			}
 			nodes[child].Parent = nodes[parent]
 			nodes[parent].Children = append(nodes[parent].Children, nodes[child])
 		}
