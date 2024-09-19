@@ -31,15 +31,17 @@ func wire(node *Node) {
 	}
 }
 
-/*
-Disjoint determines if one node is the descendant of another.
-
-	If they have the same total value, they must be disjoint, since
-	total values decrease as you proceed down the tree.
-*/
+// Disjoint determines if one node is the descendant of another.
 func Disjoint(m, n *Node) bool {
-	if m.Sum == n.Sum {
+	// Edge case: a node is not disjoint with itself.
+	if m == n {
 		return false
+	}
+	// Since every node has a value of at least 1, every node
+	// must have a subtotal greater than any of its descendants.
+	// Therefore two nodes with the same subtotal must be disjoint.
+	if m.Sum == n.Sum {
+		return true
 	}
 	if m.Sum < n.Sum {
 		m, n = n, m
@@ -47,10 +49,10 @@ func Disjoint(m, n *Node) bool {
 
 	for ; n != nil; n = n.Parent {
 		if n.Parent == m {
-			return true
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 func MkArray(n *Node, sorted []*Node) []*Node {
@@ -72,7 +74,9 @@ func Solve(root *Node) int {
 	// cannot be the ancestor of another without having a higher total value).
 	resultForBlah := -1
 	lowerBound := (root.Sum + 2) / 3
-	upperBound := root.Sum / 2
+	// Any subtree must have a subtotal of at least 1; we're not going to
+	// synthesize on from a null subtree. 
+	upperBound := (root.Sum - 1) / 2
 	for v := lowerBound; v <= upperBound; v++ {
 		// See https://pkg.go.dev/sort#Search
 		index := sort.Search(len(sums), func(i int) bool { return sums[i].Sum >= v })
@@ -107,7 +111,7 @@ func Solve(root *Node) int {
 		}
 		// Filter out descendants.
 		for i := blah; sums[i].Sum == target; i++ {
-			if !Disjoint(sums[index], sums[i]) {
+			if Disjoint(sums[index], sums[i]) {
 				resultForPoo = v - sums[i].Sum
 				if resultForBlah == -1 || resultForPoo < resultForBlah  {
 					return resultForPoo
@@ -184,9 +188,9 @@ func TestSamples(t *testing.T) {
 	}
 
 	tests := []Test{
-		//{"sample00-1.txt", 2},
-		//{"sample00-2.txt", -1},
-		//{"input06.txt", 19},
+		{"sample00-1.txt", 2},
+		{"sample00-2.txt", -1},
+		{"input06.txt", 19},
 		{"input07.txt", 4},
 	}
 
