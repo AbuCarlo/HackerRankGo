@@ -76,18 +76,20 @@ func Solve(root *Node) int {
 	resultForBlah := -1
 	lowerBound := (root.Sum + 2) / 3
 	// Any subtree must have a subtotal of at least 1; we're not going to
-	// synthesize on from a null subtree. 
+	// synthesize on from a null subtree.
 	upperBound := (root.Sum - 1) / 2
 	for v := lowerBound; v <= upperBound; v++ {
 		// See https://pkg.go.dev/sort#Search
 		index := sort.Search(len(sums), func(i int) bool { return sums[i].Sum >= v })
 		if sums[index].Sum != v {
+			// v = sums[index].Sum
 			continue
 		}
 		// Are there at least 2 subtrees with this subtotal?
 		if sums[index].Sum != sums[index+1].Sum {
 			// We start at a node with no more than half the value of the entire tree,
 			// so index + 1 will not be out of bounds.
+			// v = sums[index+1].Sum
 			continue
 		}
 		resultForBlah = v - (root.Sum - 2*v)
@@ -105,7 +107,7 @@ func Solve(root *Node) int {
 			// TODO Raise v here.
 			continue
 		}
-		target := root.Sum - 2 * v
+		target := root.Sum - 2*v
 		blah := sort.Search(len(sums), func(i int) bool { return sums[i].Sum >= target })
 		if sums[blah].Sum != target {
 			continue
@@ -114,7 +116,7 @@ func Solve(root *Node) int {
 		for i := blah; sums[i].Sum == target; i++ {
 			if Disjoint(sums[index], sums[i]) {
 				resultForPoo = v - sums[i].Sum
-				if resultForBlah == -1 || resultForPoo < resultForBlah  {
+				if resultForBlah == -1 || resultForPoo < resultForBlah {
 					return resultForPoo
 				}
 			}
@@ -185,57 +187,81 @@ func TestTreeGeneration(t *testing.T) {
 func TestSamples(t *testing.T) {
 	type Test struct {
 		path     string
-		expected int
+		expected []int
 	}
 
 	tests := []Test{
-		{"sample00-1.txt", 2},
-		{"sample00-2.txt", -1},
-		{"input06.txt", 19},
-		{"input07.txt", 4},
+		{"sample.txt", []int{2, -1}},
+		{"input06.txt", []int{19}},
+		{"input07.txt", []int{4}},
 	}
 
 	for _, test := range tests {
-		tree := read("./balanced-forest-inputs" + "/" + test.path)
-		wire(tree)
-		actual := Solve(tree)
-		if actual != test.expected {
-			t.Errorf("Test of %s expected %d; was %d", test.path, test.expected, actual)
+		trees := read("./balanced-forest-inputs" + "/" + test.path)
+		for i, tree := range trees {
+			wire(tree)
+			actual := Solve(tree)
+			if actual != test.expected[i] {
+				t.Errorf("Test of %s[%d] expected %d; was %d", test.path, i, test.expected, actual)
+			}
+		}
+
+	}
+}
+
+func BenchmarkBalancedForest(b *testing.B) {
+	trees := read("./balanced-forest-inputs" + "/" + "input07.txt")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tree := range trees {
+			// TODO: Fix this; Solve() must call wire()
+			wire(tree)
+			Solve(tree)
 		}
 	}
 }
 
-func read(path string) *Node {
+func read(path string) []*Node {
 	// This is basically the code from HackerRank.
 	f, err := os.Open(path)
 	checkError(err)
 	reader := bufio.NewReaderSize(f, 16*1024*1024)
 
-	nTemp, err := strconv.ParseInt(strings.TrimSpace(readLine(reader)), 10, 64)
+	qTemp, err := strconv.ParseInt(strings.TrimSpace(readLine(reader)), 10, 64)
 	checkError(err)
-	n := int(nTemp)
+	q := int32(qTemp)
 
-	nodes := make([]*Node, n+1)
+	trees := []*Node{}
 
-	cTemp := strings.Split(strings.TrimSpace(readLine(reader)), " ")
+	for range q {
 
-	for i := range n {
-		cItemTemp, err := strconv.ParseInt(cTemp[i], 10, 64)
+		nTemp, err := strconv.ParseInt(strings.TrimSpace(readLine(reader)), 10, 64)
 		checkError(err)
-		cItem := int(cItemTemp)
-		id := i + 1
-		nodes[id] = &Node{id, cItem, 0, nil, nil}
-	}
+		n := int(nTemp)
+		// Nodes are 1-indexed.
+		nodes := make([]*Node, n+1)
 
-	for i := 0; i < int(n)-1; i++ {
-		a := strings.Split(strings.TrimRight(readLine(reader), " \t\r\n"), " ")
-		parent, _ := strconv.ParseInt(a[0], 10, 32)
-		child, _ := strconv.ParseInt(a[1], 10, 32)
-		nodes[child].Parent = nodes[parent]
-		nodes[parent].Children = append(nodes[parent].Children, nodes[child])
-	}
+		cTemp := strings.Split(strings.TrimSpace(readLine(reader)), " ")
 
-	return nodes[1]
+		for i := range n {
+			cItemTemp, err := strconv.ParseInt(cTemp[i], 10, 64)
+			checkError(err)
+			cItem := int(cItemTemp)
+			id := i + 1
+			nodes[id] = &Node{id, cItem, 0, nil, nil}
+		}
+
+		for i := 0; i < int(n)-1; i++ {
+			a := strings.Split(strings.TrimRight(readLine(reader), " \t\r\n"), " ")
+			// Assume the input is valid; no error-checking.
+			parent, _ := strconv.ParseInt(a[0], 10, 32)
+			child, _ := strconv.ParseInt(a[1], 10, 32)
+			nodes[child].Parent = nodes[parent]
+			nodes[parent].Children = append(nodes[parent].Children, nodes[child])
+		}
+		trees = append(trees, nodes[1])
+	}
+	return trees
 }
 
 func readLine(reader *bufio.Reader) string {
