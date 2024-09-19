@@ -22,7 +22,7 @@ func Sign[T constraints.Integer](x T) int {
 	if x > 0 {
 		return 1
 	}
-	return 1
+	return 0
 }
 
 type Problem struct {
@@ -83,66 +83,53 @@ func mkArray(n *Node, sorted []*Node) []*Node {
 
 func Solve(root *Node) int32 {
 	wire(root)
-	sums := mkArray(root, nil)
-	slices.SortFunc(sums, func(m *Node, n *Node) int { return Sign(m.Subtotal - n.Subtotal) })
+	sortedBySubtotal := mkArray(root, nil)
+	slices.SortFunc(sortedBySubtotal, func(m *Node, n *Node) int { return Sign(m.Subtotal - n.Subtotal) })
 
 	// First option: two disjoint subtrees have the same total value. Detach them
 	// and add a balancing node to the remaining tree. Since every node has a value
 	// of at least one, two with the same total value must be disjoint (i.e. one
 	// cannot be the ancestor of another without having a higher total value).
-	resultForBlah := int64(-1)
 	lowerBound := (root.Subtotal + 2) / 3
 	// Any subtree must have a subtotal of at least 1; we're not going to
-	// synthesize on from a null subtree.
+	// synthesize one from a null subtree.
 	upperBound := (root.Subtotal - 1) / 2
 	for v := lowerBound; v <= upperBound; v++ {
+		// A subtree with this subtotal will have to be balanced.
+		target := root.Subtotal - 2 * v
 		// See https://pkg.go.dev/sort#Search
-		index := sort.Search(len(sums), func(i int) bool { return sums[i].Subtotal >= v })
-		if sums[index].Subtotal != v {
-			// v = sums[index].Sum
+		index := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= v })
+		if sortedBySubtotal[index].Subtotal != v {
 			continue
 		}
 		// Are there at least 2 subtrees with this subtotal?
-		if sums[index].Subtotal != sums[index+1].Subtotal {
-			// We start at a node with no more than half the value of the entire tree,
-			// so index + 1 will not be out of bounds.
-			// v = sums[index+1].Sum
-			continue
+		if sortedBySubtotal[index].Subtotal == sortedBySubtotal[index+1].Subtotal {
+			return int32(v - target)
 		}
-		resultForBlah = v - (root.Subtotal - 2*v)
-		break
-	}
 
-	// Second option: There are two disjoint subtrees such that if they're both removed from the
-	// tree, the remaining value will have the same subtotal as one of them. The lesser subtree
-	// can then be balanced.
-	resultForPoo := int64(-1)
-	for v := lowerBound; v <= upperBound; v++ {
-		index := sort.Search(len(sums), func(i int) bool { return sums[i].Subtotal >= v })
-		// We could just count down here.
-		if sums[index].Subtotal != v {
-			// TODO Raise v here.
-			continue
-		}
-		target := root.Subtotal - 2*v
-		blah := sort.Search(len(sums), func(i int) bool { return sums[i].Subtotal >= target })
-		if sums[blah].Subtotal != target {
-			continue
-		}
-		// Filter out descendants.
-		for i := blah; sums[i].Subtotal == target; i++ {
-			if Disjoint(sums[index], sums[i]) {
-				resultForPoo = v - sums[i].Subtotal
-				if resultForBlah == -1 || resultForPoo < resultForBlah {
-					return int32(resultForPoo)
+		// Second option: There are two disjoint subtrees such that if they're both removed from the
+		// tree, the remaining value will have the same subtotal as one of them. The lesser subtree
+		// can then be balanced.
+
+		blah := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= target })
+		if sortedBySubtotal[blah].Subtotal == target {
+			// Filter out descendants.
+			for i := blah; sortedBySubtotal[i].Subtotal == target; i++ {
+				if Disjoint(sortedBySubtotal[index], sortedBySubtotal[i]) {
+					return int32(v - target)
 				}
 			}
 		}
-		// break
-	}
 
-	if resultForBlah != -1 {
-		return int32(resultForBlah)
+		// Third option: walk up the tree from one of the selection.
+		for i := index; sortedBySubtotal[i].Subtotal == v; i++ {
+			candidate := sortedBySubtotal[i]
+			for p := candidate.Parent; p != nil; p = p.Parent {
+				if p.Subtotal - v == target || p.Subtotal - v == v {
+					return int32(v - target)
+				}
+			}
+		}
 	}
 
 	return -1
