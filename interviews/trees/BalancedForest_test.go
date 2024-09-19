@@ -16,18 +16,18 @@ import (
 type Node struct {
 	Id       int
 	Value    int
-	Sum      int
+	Subtotal int
 	Parent   *Node
 	Children []*Node
 	// TODO: Make this a long.
 }
 
 func wire(node *Node) {
-	node.Sum = node.Value
+	node.Subtotal = node.Value
 	for i := 0; i < len(node.Children); i++ {
 		child := node.Children[i]
 		wire(child)
-		node.Sum += child.Sum
+		node.Subtotal += child.Subtotal
 	}
 }
 
@@ -40,11 +40,11 @@ func Disjoint(m, n *Node) bool {
 	// Since every node has a value of at least 1, every node
 	// must have a subtotal greater than any of its descendants.
 	// Therefore two nodes with the same subtotal must be disjoint.
-	if m.Sum == n.Sum {
+	if m.Subtotal == n.Subtotal {
 		return true
 	}
 	// The node with the lower subtotal cannot be the ancestor.
-	if m.Sum < n.Sum {
+	if m.Subtotal < n.Subtotal {
 		m, n = n, m
 	}
 	// Now follow the path to the root.
@@ -56,43 +56,44 @@ func Disjoint(m, n *Node) bool {
 	return true
 }
 
-func MkArray(n *Node, sorted []*Node) []*Node {
+func mkArray(n *Node, sorted []*Node) []*Node {
 	sorted = append(sorted, n)
 	for _, child := range n.Children {
-		sorted = MkArray(child, sorted)
+		sorted = mkArray(child, sorted)
 	}
 
 	return sorted
 }
 
 func Solve(root *Node) int {
-	sums := MkArray(root, nil)
-	slices.SortFunc(sums, func(m *Node, n *Node) int { return m.Sum - n.Sum })
+	wire(root)
+	sums := mkArray(root, nil)
+	slices.SortFunc(sums, func(m *Node, n *Node) int { return m.Subtotal - n.Subtotal })
 
 	// First option: two disjoint subtrees have the same total value. Detach them
 	// and add a balancing node to the remaining tree. Since every node has a value
 	// of at least one, two with the same total value must be disjoint (i.e. one
 	// cannot be the ancestor of another without having a higher total value).
 	resultForBlah := -1
-	lowerBound := (root.Sum + 2) / 3
+	lowerBound := (root.Subtotal + 2) / 3
 	// Any subtree must have a subtotal of at least 1; we're not going to
 	// synthesize on from a null subtree.
-	upperBound := (root.Sum - 1) / 2
+	upperBound := (root.Subtotal - 1) / 2
 	for v := lowerBound; v <= upperBound; v++ {
 		// See https://pkg.go.dev/sort#Search
-		index := sort.Search(len(sums), func(i int) bool { return sums[i].Sum >= v })
-		if sums[index].Sum != v {
+		index := sort.Search(len(sums), func(i int) bool { return sums[i].Subtotal >= v })
+		if sums[index].Subtotal != v {
 			// v = sums[index].Sum
 			continue
 		}
 		// Are there at least 2 subtrees with this subtotal?
-		if sums[index].Sum != sums[index+1].Sum {
+		if sums[index].Subtotal != sums[index+1].Subtotal {
 			// We start at a node with no more than half the value of the entire tree,
 			// so index + 1 will not be out of bounds.
 			// v = sums[index+1].Sum
 			continue
 		}
-		resultForBlah = v - (root.Sum - 2*v)
+		resultForBlah = v - (root.Subtotal - 2*v)
 		break
 	}
 
@@ -101,21 +102,21 @@ func Solve(root *Node) int {
 	// can then be balanced.
 	resultForPoo := -1
 	for v := lowerBound; v <= upperBound; v++ {
-		index := sort.Search(len(sums), func(i int) bool { return sums[i].Sum >= v })
+		index := sort.Search(len(sums), func(i int) bool { return sums[i].Subtotal >= v })
 		// We could just count down here.
-		if sums[index].Sum != v {
+		if sums[index].Subtotal != v {
 			// TODO Raise v here.
 			continue
 		}
-		target := root.Sum - 2*v
-		blah := sort.Search(len(sums), func(i int) bool { return sums[i].Sum >= target })
-		if sums[blah].Sum != target {
+		target := root.Subtotal - 2*v
+		blah := sort.Search(len(sums), func(i int) bool { return sums[i].Subtotal >= target })
+		if sums[blah].Subtotal != target {
 			continue
 		}
 		// Filter out descendants.
-		for i := blah; sums[i].Sum == target; i++ {
+		for i := blah; sums[i].Subtotal == target; i++ {
 			if Disjoint(sums[index], sums[i]) {
-				resultForPoo = v - sums[i].Sum
+				resultForPoo = v - sums[i].Subtotal
 				if resultForBlah == -1 || resultForPoo < resultForBlah {
 					return resultForPoo
 				}
@@ -153,7 +154,7 @@ func TestTreeGeneration(t *testing.T) {
 				node.Children = append(node.Children, &child)
 				nodes = append(nodes, &child)
 				child.Parent = node
-				node.Sum += child.Value
+				node.Subtotal += child.Value
 
 				id++
 			}
@@ -169,14 +170,14 @@ func TestTreeGeneration(t *testing.T) {
 			traversal = traversal[1:]
 			for i := 0; i < len(node.Children); i++ {
 				child := node.Children[i]
-				sum += child.Sum
+				sum += child.Subtotal
 				if child.Parent != node {
 					t.Errorf("Node %d has child %d, but child does not point to its parent.", node.Id, child.Id)
 				}
 			}
 
-			if sum != node.Sum {
-				t.Errorf("Node %d has a sum of %d, but its children sum to %d", node.Id, node.Sum, sum)
+			if sum != node.Subtotal {
+				t.Errorf("Node %d has a sum of %d, but its children sum to %d", node.Id, node.Subtotal, sum)
 			}
 
 		}
@@ -199,7 +200,6 @@ func TestSamples(t *testing.T) {
 	for _, test := range tests {
 		trees := read("./balanced-forest-inputs" + "/" + test.path)
 		for i, tree := range trees {
-			wire(tree)
 			actual := Solve(tree)
 			if actual != test.expected[i] {
 				t.Errorf("Test of %s[%d] expected %d; was %d", test.path, i, test.expected, actual)
@@ -214,8 +214,6 @@ func BenchmarkBalancedForest(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, tree := range trees {
-			// TODO: Fix this; Solve() must call wire()
-			wire(tree)
 			Solve(tree)
 		}
 	}
