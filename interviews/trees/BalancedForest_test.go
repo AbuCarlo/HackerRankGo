@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,40 +16,112 @@ import (
 type Node struct {
 	Id       int
 	Value    int
+	Sum      int
 	Parent   *Node
 	Children []*Node
 	// TODO: Make this a long.
-	Sum int
 }
 
 func wire(node *Node) {
-	sum := node.Value
+	node.Sum = node.Value
 	for i := 0; i < len(node.Children); i++ {
 		child := node.Children[i]
 		wire(child)
-		sum += child.Sum
+		node.Sum += child.Sum
 	}
-	node.Sum = sum
 }
 
-func Disconnect(node *Node) *Node {
-	var result *Node
-	for parent := node.Parent; parent != nil; {
-		result = &Node{parent.Id, parent.Value, nil, nil, parent.Sum - node.Sum}
-		// Copy the children, with one exception.
-		for _, n := range parent.Children {
-			if n == node {
-				result.Children = append(result.Children, result)
-				n.Parent = result
-			} else {
-				result.Children = append(result.Children, n)
+/*
+Disjoint determines if one node is the descendant of another.
+
+	If they have the same total value, they must be disjoint, since
+	total values decrease as you proceed down the tree.
+*/
+func Disjoint(m, n *Node) bool {
+	if m.Sum == n.Sum {
+		return false
+	}
+	if m.Sum < n.Sum {
+		m, n = n, m
+	}
+
+	for ; n != nil; n = n.Parent {
+		if n.Parent == m {
+			return true
+		}
+	}
+	return false
+}
+
+func MkArray(n *Node, sorted []*Node) []*Node {
+	sorted = append(sorted, n)
+	for _, child := range n.Children {
+		sorted = MkArray(child, sorted)
+	}
+
+	return sorted
+}
+
+func Solve(root *Node) int {
+	sums := MkArray(root, nil)
+	slices.SortFunc(sums, func(m *Node, n *Node) int { return m.Sum - n.Sum })
+
+	// First option: two disjoint subtrees have the same total value. Detach them
+	// and add a balancing node to the remaining tree. Since every node has a value
+	// of at least one, two with the same total value must be disjoint (i.e. one
+	// cannot be the ancestor of another without having a higher total value).
+	resultForBlah := -1
+	lowerBound := (root.Sum + 2) / 3
+	upperBound := root.Sum / 2
+	for v := lowerBound; v <= upperBound; v++ {
+		// See https://pkg.go.dev/sort#Search
+		index := sort.Search(len(sums), func(i int) bool { return sums[i].Sum >= v })
+		if sums[index].Sum != v {
+			continue
+		}
+		// Are there at least 2 subtrees with this subtotal?
+		if sums[index].Sum != sums[index+1].Sum {
+			// We start at a node with no more than half the value of the entire tree,
+			// so index + 1 will not be out of bounds.
+			continue
+		}
+		resultForBlah = v - (root.Sum - 2*v)
+		break
+	}
+
+	// Second option: There are two disjoint subtrees such that if they're both removed from the
+	// tree, the remaining value will have the same subtotal as one of them. The lesser subtree
+	// can then be balanced.
+	resultForPoo := -1
+	for v := lowerBound; v <= upperBound; v++ {
+		index := sort.Search(len(sums), func(i int) bool { return sums[i].Sum >= v })
+		// We could just count down here.
+		if sums[index].Sum != v {
+			// TODO Raise v here.
+			continue
+		}
+		target := root.Sum - 2 * v
+		blah := sort.Search(len(sums), func(i int) bool { return sums[i].Sum >= target })
+		if sums[blah].Sum != target {
+			continue
+		}
+		// Filter out descendants.
+		for i := blah; sums[i].Sum == target; i++ {
+			if !Disjoint(sums[index], sums[i]) {
+				resultForPoo = v - sums[i].Sum
+				if resultForBlah == -1 || resultForPoo < resultForBlah  {
+					return resultForPoo
+				}
 			}
 		}
-		tmp := parent
-		parent = parent.Parent
-		node = tmp
+		break
 	}
-	return result
+
+	if resultForBlah != -1 {
+		return resultForBlah
+	}
+
+	return -1
 }
 
 func TestTreeGeneration(t *testing.T) {
@@ -59,7 +133,7 @@ func TestTreeGeneration(t *testing.T) {
 
 		id := 1
 		c := valueGenerator.Draw(t, "c")
-		root := Node{id, c, nil, nil, 0}
+		root := Node{id, c, 0, nil, nil}
 		nodes := []*Node{&root}
 		id++
 		for id < size {
@@ -68,7 +142,7 @@ func TestTreeGeneration(t *testing.T) {
 			blah := blahGenerator.Draw(t, "blah")
 			for j := 1; j <= blah && id <= size; j++ {
 				c := valueGenerator.Draw(t, "c")
-				child := Node{id, c, node, nil, c}
+				child := Node{id, c, c, node, nil}
 				node.Children = append(node.Children, &child)
 				nodes = append(nodes, &child)
 				child.Parent = node
@@ -103,10 +177,6 @@ func TestTreeGeneration(t *testing.T) {
 	rapid.Check(t, f)
 }
 
-func balancedForest(_ *Node) int {
-	return 0
-}
-
 func TestSamples(t *testing.T) {
 	type Test struct {
 		path     string
@@ -114,20 +184,20 @@ func TestSamples(t *testing.T) {
 	}
 
 	tests := []Test{
-		{"input00-1.txt", 1},
-		{"input00-2.txt", 1},
-		{"input06.txt", 1},
-		{"input07.txt", 1},
+		//{"sample00-1.txt", 2},
+		//{"sample00-2.txt", -1},
+		//{"input06.txt", 19},
+		{"input07.txt", 4},
 	}
 
 	for _, test := range tests {
 		tree := read("./balanced-forest-inputs" + "/" + test.path)
-		actual := balancedForest(tree)
+		wire(tree)
+		actual := Solve(tree)
 		if actual != test.expected {
 			t.Errorf("Test of %s expected %d; was %d", test.path, test.expected, actual)
 		}
 	}
-
 }
 
 func read(path string) *Node {
@@ -140,7 +210,7 @@ func read(path string) *Node {
 	checkError(err)
 	n := int(nTemp)
 
-	nodes := make([]*Node, n + 1)
+	nodes := make([]*Node, n+1)
 
 	cTemp := strings.Split(strings.TrimSpace(readLine(reader)), " ")
 
@@ -149,7 +219,7 @@ func read(path string) *Node {
 		checkError(err)
 		cItem := int(cItemTemp)
 		id := i + 1
-		nodes[id] = &Node{id, cItem, nil, nil, 0}
+		nodes[id] = &Node{id, cItem, 0, nil, nil}
 	}
 
 	for i := 0; i < int(n)-1; i++ {
