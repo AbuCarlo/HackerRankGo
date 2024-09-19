@@ -192,9 +192,9 @@ func TestSamples(t *testing.T) {
 	}
 
 	tests := []Test{
-		{"sample.txt", []int{2, -1}},
-		{"input06.txt", []int{19}},
-		{"input07.txt", []int{4}},
+		{"test-case-00.txt", []int{2, -1}},
+		{"test-case-06.txt", []int{19}},
+		{"test-case-07.txt", []int{4}},
 	}
 
 	for _, test := range tests {
@@ -210,7 +210,7 @@ func TestSamples(t *testing.T) {
 }
 
 func BenchmarkBalancedForest(b *testing.B) {
-	trees := read("./balanced-forest-inputs" + "/" + "input07.txt")
+	trees := read("./balanced-forest-inputs" + "/" + "test-case-07.txt")
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, tree := range trees {
