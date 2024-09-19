@@ -192,9 +192,10 @@ func TestSamples(t *testing.T) {
 	}
 
 	tests := []Test{
-		{"test-case-00.txt", []int{2, -1}},
-		{"test-case-06.txt", []int{19}},
-		{"test-case-07.txt", []int{4}},
+		{"input00.txt", []int{2, -1}},
+		//{"input01.txt", []int{-1, 10, 13, 5, 297}},
+		{"input06.txt", []int{19}},
+		{"input07.txt", []int{4}},
 	}
 
 	for _, test := range tests {
@@ -202,7 +203,7 @@ func TestSamples(t *testing.T) {
 		for i, tree := range trees {
 			actual := Solve(tree)
 			if actual != test.expected[i] {
-				t.Errorf("Test of %s[%d] expected %d; was %d", test.path, i, test.expected, actual)
+				t.Errorf("Test of %s[%d] expected %d; was %d", test.path, i, test.expected[i], actual)
 			}
 		}
 
@@ -210,7 +211,7 @@ func TestSamples(t *testing.T) {
 }
 
 func BenchmarkBalancedForest(b *testing.B) {
-	trees := read("./balanced-forest-inputs" + "/" + "test-case-07.txt")
+	trees := read("./balanced-forest-inputs" + "/" + "input07.txt")
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, tree := range trees {
