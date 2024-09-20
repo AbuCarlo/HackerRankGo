@@ -81,42 +81,43 @@ func Solve(root *Node) int64 {
 	// an entirely new node to balance the tree. So the highest value to try is half
 	// the total value of the tree.
 	upperBound := root.Subtotal / 2
-	for v := lowerBound; v <= upperBound; v++ {
+	for target := lowerBound; target <= upperBound; target++ {
 		// A subtree with this subtotal will have to be balanced.
-		target := root.Subtotal - 2*v
+		remainder := root.Subtotal - 2*target
 		// See https://pkg.go.dev/sort#Search
-		index := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= v })
+		targetIndex := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= target })
+		remainderIndex := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= remainder })
 		// Are there at least 2 subtrees with this subtotal? They must be disjoint.
-		if sortedBySubtotal[index].Subtotal == v && sortedBySubtotal[index+1].Subtotal == v {
-			return v - target		}
+		if sortedBySubtotal[targetIndex].Subtotal == target && sortedBySubtotal[targetIndex+1].Subtotal == target {
+			return target - remainder		
+		}
 
 		// Second option: There are two disjoint subtrees such that if they're both removed from the
 		// tree, the remaining value will have the same subtotal as one of them. The lesser subtree
 		// can then be balanced.
 
-		blah := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= target })
-		for i := blah; sortedBySubtotal[i].Subtotal == target; i++ {
-			for j := index; sortedBySubtotal[j].Subtotal == v; j++ {
+		for i := remainderIndex; sortedBySubtotal[i].Subtotal == remainder; i++ {
+			for j := targetIndex; sortedBySubtotal[j].Subtotal == target; j++ {
 				if Disjoint(sortedBySubtotal[j], sortedBySubtotal[i]) {
-					return v - target
+					return target - remainder
 				}
 			}
 		}
 
 		// Third option: walk up the tree from one of the selection.
-		for i := index; sortedBySubtotal[i].Subtotal == v; i++ {
+		for i := targetIndex; sortedBySubtotal[i].Subtotal == target; i++ {
 			candidate := sortedBySubtotal[i]
 			for p := candidate.Parent; p != nil; p = p.Parent {
-				if p.Subtotal-v == target || p.Subtotal-v == v {
-					return v - target				}
+				if p.Subtotal-target == remainder || p.Subtotal-target == target {
+					return target - remainder				}
 			}
 		}
 
-		for i := blah; sortedBySubtotal[i].Subtotal == target; i++ {
+		for i := remainderIndex; sortedBySubtotal[i].Subtotal == remainder; i++ {
 			candidate := sortedBySubtotal[i]
 			for p := candidate.Parent; p != nil; p = p.Parent {
-				if p.Subtotal-target == v {
-					return v - target
+				if p.Subtotal-remainder == target {
+					return target - remainder
 				}
 			}
 		}
@@ -194,7 +195,7 @@ func TestSamples(t *testing.T) {
 }
 
 func BenchmarkBalancedForest(b *testing.B) {
-	problems := read("./balanced-forest-inputs" + "/" + "input07.txt")
+	problems := read("./balanced-forest-inputs" + "/" + "input02.txt")
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, problem := range problems {
