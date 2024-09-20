@@ -140,7 +140,7 @@ func mkNode(node *Node, nodes []*Node, adjacency [][]int32) {
 
 func mkTree(c []int32, edges [][]int32) *Node {
 	// The first value is 0: there is no node 0.
-	adjacency := make([][]int32, len(c))
+	adjacency := make([][]int32, len(c) + 1)
 
 	for _, edge := range edges {
 		u, v := edge[0], edge[1]
@@ -148,9 +148,9 @@ func mkTree(c []int32, edges [][]int32) *Node {
 		adjacency[v] = append(adjacency[v], u)
 	}
 
-	nodes := make([]*Node, len(c))
-	for id := 1; id < len(c); id++ {
-		nodes[id] = &Node{int32(id), c[id], 0, nil, nil}
+	nodes := make([]*Node, len(c) + 1)
+	for i, cost := range c {
+		nodes[i + 1] = &Node{int32(i + 1), cost, 0, nil, nil}
 	}
 
 	r := rand.Int31n(int32(len(c)-1)) + 1
@@ -221,7 +221,7 @@ func read(path string) []Problem {
 		checkError(err)
 		n := int(nTemp)
 		// Nodes are 1-indexed.
-		c := make([]int32, n+1)
+		c := make([]int32, n)
 
 		cTemp := strings.Split(strings.TrimSpace(readLine(reader)), " ")
 
@@ -229,7 +229,7 @@ func read(path string) []Problem {
 			cItemTemp, err := strconv.ParseInt(cTemp[i], 10, 64)
 			checkError(err)
 			cItem := int32(cItemTemp)
-			c[i+1] = cItem
+			c[i] = cItem
 		}
 
 		edges := make([][]int32, n-1)
