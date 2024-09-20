@@ -11,14 +11,13 @@ import (
 	"strings"
 	"testing"
 
+	"golang.org/x/exp/constraints"
 )
 
-import "golang.org/x/exp/constraints"
-
 func Sign[T constraints.Integer](x T) int {
-    if x < 0 {
-        return -1
-    }
+	if x < 0 {
+		return -1
+	}
 	if x > 0 {
 		return 1
 	}
@@ -27,7 +26,7 @@ func Sign[T constraints.Integer](x T) int {
 
 type Problem struct {
 	Values []int32
-	Edges [][]int32
+	Edges  [][]int32
 }
 
 type Node struct {
@@ -96,14 +95,11 @@ func Solve(root *Node) int32 {
 	upperBound := (root.Subtotal - 1) / 2
 	for v := lowerBound; v <= upperBound; v++ {
 		// A subtree with this subtotal will have to be balanced.
-		target := root.Subtotal - 2 * v
+		target := root.Subtotal - 2*v
 		// See https://pkg.go.dev/sort#Search
 		index := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= v })
-		if sortedBySubtotal[index].Subtotal != v {
-			continue
-		}
-		// Are there at least 2 subtrees with this subtotal?
-		if sortedBySubtotal[index].Subtotal == sortedBySubtotal[index+1].Subtotal {
+		// Are there at least 2 subtrees with this subtotal? They must be disjoint.
+		if  sortedBySubtotal[index].Subtotal == v && sortedBySubtotal[index+1].Subtotal == v {
 			return int32(v - target)
 		}
 
@@ -125,7 +121,7 @@ func Solve(root *Node) int32 {
 		for i := index; sortedBySubtotal[i].Subtotal == v; i++ {
 			candidate := sortedBySubtotal[i]
 			for p := candidate.Parent; p != nil; p = p.Parent {
-				if p.Subtotal - v == target || p.Subtotal - v == v {
+				if p.Subtotal-v == target || p.Subtotal-v == v {
 					return int32(v - target)
 				}
 			}
@@ -134,7 +130,7 @@ func Solve(root *Node) int32 {
 		for i := blah; sortedBySubtotal[i].Subtotal == target; i++ {
 			candidate := sortedBySubtotal[i]
 			for p := candidate.Parent; p != nil; p = p.Parent {
-				if p.Subtotal - target == v {
+				if p.Subtotal-target == v {
 					return int32(v - target)
 				}
 			}
@@ -152,7 +148,7 @@ func mkNode(node *Node, nodes []*Node, adjacency [][]int32) {
 		}
 		child.Parent = node
 		node.Children = append(node.Children, child)
-		
+
 		mkNode(child, nodes, adjacency)
 	}
 }
@@ -172,18 +168,17 @@ func mkTree(c []int32, edges [][]int32) *Node {
 		nodes[id] = &Node{int32(id), c[id], 0, nil, nil}
 	}
 
-	r := rand.Int31n(int32(len(c) - 1)) + 1
+	r := rand.Int31n(int32(len(c)-1)) + 1
 	root := nodes[r]
 	mkNode(root, nodes, adjacency)
-	
+
 	return root
 }
 
 func balancedForest(c []int32, edges [][]int32) int32 {
-    tree := mkTree(c, edges)
+	tree := mkTree(c, edges)
 	return Solve(tree)
 }
-
 
 func TestSamples(t *testing.T) {
 	type Test struct {
@@ -192,13 +187,13 @@ func TestSamples(t *testing.T) {
 	}
 
 	tests := []Test{
-		{"input00.txt", []int32{2, -1}},
+		//{"input00.txt", []int32{2, -1}},
 		//{"input01.txt", []int32{-1, 10, 13, 5, 297}},
 		// {"input02.txt", []int{1112, 2041, 959, -1, -1}},
 		// {"input03.txt", []int{1714, 5016, 759000000000, -1, 6}},
 		// {"input04.txt", []int{1357940809, 397705399909, 439044899265, 104805614260, -1}},
 		// {"input05.txt", []int{24999687487500, 16217607772, 4, 0, -1}},
-		//{"input06.txt", []int32{19}},
+		{"input06.txt", []int32{19}},
 		//{"input07.txt", []int32{4}},
 	}
 
@@ -241,7 +236,7 @@ func read(path string) []Problem {
 		checkError(err)
 		n := int(nTemp)
 		// Nodes are 1-indexed.
-		c := make([]int32, n + 1)
+		c := make([]int32, n+1)
 
 		cTemp := strings.Split(strings.TrimSpace(readLine(reader)), " ")
 
@@ -249,10 +244,10 @@ func read(path string) []Problem {
 			cItemTemp, err := strconv.ParseInt(cTemp[i], 10, 64)
 			checkError(err)
 			cItem := int32(cItemTemp)
-			c[i + 1] = cItem
+			c[i+1] = cItem
 		}
 
-		edges := make([][]int32, n - 1)
+		edges := make([][]int32, n-1)
 		for i := range n - 1 {
 			a := strings.Split(strings.TrimRight(readLine(reader), " \t\r\n"), " ")
 			// Assume the input is valid; no error-checking.
