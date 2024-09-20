@@ -5,7 +5,6 @@ import (
 	"io"
 	"math/rand"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -58,82 +57,12 @@ func Disjoint(m, n *Node) bool {
 	return true
 }
 
-func mkArray(n *Node, sorted []*Node) []*Node {
-	sorted = append(sorted, n)
-	for _, child := range n.Children {
-		sorted = mkArray(child, sorted)
+func mkMap(nodes []*Node) map[int64][]*Node {	
+	m := make(map[int64][]*Node)
+	for _, n := range nodes {
+		m[n.Subtotal] = append(m[n.Subtotal], n)
 	}
-
-	return sorted
-}
- 
-func Solve(root *Node) int64 {
-	wire(root)
-	sortedBySubtotal := mkArray(root, nil)
-	sort.Slice(sortedBySubtotal, func(i, j int) bool { return sortedBySubtotal[i].Subtotal < sortedBySubtotal[j].Subtotal })
-
-	// First option: two disjoint subtrees have the same total value. Detach them
-	// and add a balancing node to the remaining tree. Since every node has a value
-	// of at least one, two with the same total value must be disjoint (i.e. one
-	// cannot be the ancestor of another without having a higher total value).
-	lowerBound := (root.Subtotal + 2) / 3
-	// It's not clear from the problem statement, but yes, we are allowed to synthesize
-	// an entirely new node to balance the tree. So the highest value to try is half
-	// the total value of the tree.
-	upperBound := root.Subtotal / 2
-	for value := lowerBound; value <= upperBound; value++ {
-		// A subtree with this subtotal will have to be balanced.
-		remainder := root.Subtotal - 2*value
-		// See https://pkg.go.dev/sort#Search
-		targetIndex := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= value })
-
-		// Are there at least 2 subtrees with this subtotal? They must be disjoint.
-		if sortedBySubtotal[targetIndex].Subtotal == value && sortedBySubtotal[targetIndex+1].Subtotal == value {
-			return value - remainder		
-		}
-		// The slight optimization of cutting off the search at targetIndex has no effect!
-		remainderIndex := sort.Search(targetIndex, func(i int) bool { return sortedBySubtotal[i].Subtotal >= remainder })
-
-		// Second option: There are two disjoint subtrees such that if they're both removed from the
-		// tree, the remaining value will have the same subtotal as one of them. The lesser subtree
-		// can then be balanced.
-
-		for i := remainderIndex; sortedBySubtotal[i].Subtotal == remainder; i++ {
-			for j := targetIndex; sortedBySubtotal[j].Subtotal == value; j++ {
-				if Disjoint(sortedBySubtotal[j], sortedBySubtotal[i]) {
-					return value - remainder
-				}
-			}
-		}
-
-		// Third option: walk up the tree from one of the selection.
-		for i := targetIndex; sortedBySubtotal[i].Subtotal == value; i++ {
-			candidate := sortedBySubtotal[i]
-			for p := candidate.Parent; p != nil; p = p.Parent {
-				if p.Subtotal-value == remainder || p.Subtotal-value == value {
-					return value - remainder				
-				}
-				if p.Subtotal-value >= value {
-					break
-				}
-			}
-		}
-
-		for i := remainderIndex; sortedBySubtotal[i].Subtotal == remainder; i++ {
-			candidate := sortedBySubtotal[i]
-			for p := candidate.Parent; p != nil; p = p.Parent {
-				if p.Subtotal-remainder >= value {
-					if p.Subtotal-remainder > value {
-						// Stop going up the tree.
-						break
-					}
-					return value - remainder
-				}
-			}
-		}
-	}
-
-	return -1
+	return m
 }
 
 func mkNode(node *Node, nodes []*Node, adjacency [][]int32) {
@@ -149,7 +78,7 @@ func mkNode(node *Node, nodes []*Node, adjacency [][]int32) {
 	}
 }
 
-func mkTree(c []int32, edges [][]int32) *Node {
+func mkTree(c []int32, edges [][]int32) ([]*Node, *Node) {
 	// The first value is 0: there is no node 0.
 	adjacency := make([][]int32, len(c) + 1)
 
@@ -168,12 +97,74 @@ func mkTree(c []int32, edges [][]int32) *Node {
 	root := nodes[r]
 	mkNode(root, nodes, adjacency)
 
-	return root
+	return nodes[1:], root
 }
 
 func balancedForest(c []int32, edges [][]int32) int64 {
-	tree := mkTree(c, edges)
-	return Solve(tree)
+	nodes, root := mkTree(c, edges)
+	wire(root)
+	sortedBySubtotal := mkMap(nodes)
+
+	// First option: two disjoint subtrees have the same total value. Detach them
+	// and add a balancing node to the remaining tree. Since every node has a value
+	// of at least one, two with the same total value must be disjoint (i.e. one
+	// cannot be the ancestor of another without having a higher total value).
+	lowerBound := (root.Subtotal + 2) / 3
+	// It's not clear from the problem statement, but yes, we are allowed to synthesize
+	// an entirely new node to balance the tree. So the highest value to try is half
+	// the total value of the tree.
+	upperBound := root.Subtotal / 2
+	for value := lowerBound; value <= upperBound; value++ {
+		// A subtree with this subtotal will have to be balanced.
+		remainder := root.Subtotal - 2*value
+		// See https://pkg.go.dev/sort#Search
+		targets := sortedBySubtotal[value]
+
+		// Are there at least 2 subtrees with this subtotal? They must be disjoint.
+		if len(targets) > 1 {
+			return value - remainder
+		}
+		// The slight optimization of cutting off the search at targetIndex has no effect!
+		remainders := sortedBySubtotal[remainder]
+
+		// Second option: There are two disjoint subtrees such that if they're both removed from the
+		// tree, the remaining value will have the same subtotal as one of them. The lesser subtree
+		// can then be balanced.
+
+		for _, remainderSubtree := range remainders {
+			for _, targetSubtree := range targets {
+				if Disjoint(targetSubtree, remainderSubtree) {
+					return value - remainder
+				}
+			}
+		}
+
+		// Third option: walk up the tree from one of the selection.
+		for _, targetSubtree := range targets {
+			for p := targetSubtree.Parent; p != nil; p = p.Parent {
+				if p.Subtotal-value == remainder || p.Subtotal-value == value {
+					return value - remainder				
+				}
+				if p.Subtotal-value >= value {
+					break
+				}
+			}
+		}
+
+		for _, remainderSubtree := range remainders {
+			for p := remainderSubtree.Parent; p != nil; p = p.Parent {
+				if p.Subtotal-remainder >= value {
+					if p.Subtotal-remainder > value {
+						// Stop going up the tree.
+						break
+					}
+					return value - remainder
+				}
+			}
+		}
+	}
+
+	return -1
 }
 
 func TestSamples(t *testing.T) {
@@ -186,7 +177,7 @@ func TestSamples(t *testing.T) {
 		{"input00.txt", []int64{2, -1}},
 		{"input01.txt", []int64{-1, 10, 13, 5, 297}},
 		{"input02.txt", []int64{1112, 2041, 959, -1, -1}},
-		// {"input03.txt", []int64{1714, 5016, 759000000000, -1, 6}},
+		//{"input03.txt", []int64{1714, 5016, 759000000000, -1, 6}},
 		// {"input04.txt", []int64{1357940809, 397705399909, 439044899265, 104805614260, -1}},
 		// {"input05.txt", []int64{24999687487500, 16217607772, 4, 0, -1}},
 		{"input06.txt", []int64{19}},
