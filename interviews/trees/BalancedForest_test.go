@@ -5,7 +5,6 @@ import (
 	"io"
 	"math/rand"
 	"os"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -79,11 +78,11 @@ func mkArray(n *Node, sorted []*Node) []*Node {
 
 	return sorted
 }
-
+ 
 func Solve(root *Node) int32 {
 	wire(root)
 	sortedBySubtotal := mkArray(root, nil)
-	slices.SortFunc(sortedBySubtotal, func(m *Node, n *Node) int { return Sign(m.Subtotal - n.Subtotal) })
+	sort.Slice(sortedBySubtotal, func(i, j int) bool { return sortedBySubtotal[i].Subtotal < sortedBySubtotal[j].Subtotal })
 
 	// First option: two disjoint subtrees have the same total value. Detach them
 	// and add a balancing node to the remaining tree. Since every node has a value
@@ -190,7 +189,7 @@ func TestSamples(t *testing.T) {
 		{"input00.txt", []int32{2, -1}},
 		{"input01.txt", []int32{-1, 10, 13, 5, 297}},
 		{"input02.txt", []int32{1112, 2041, 959, -1, -1}},
-		// {"input03.txt", []int{1714, 5016, 759000000000, -1, 6}},
+		//{"input03.txt", []int32{1714, 5016, 759000000000, -1, 6}},
 		// {"input04.txt", []int{1357940809, 397705399909, 439044899265, 104805614260, -1}},
 		// {"input05.txt", []int{24999687487500, 16217607772, 4, 0, -1}},
 		{"input06.txt", []int32{19}},
