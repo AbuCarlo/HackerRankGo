@@ -9,19 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	"golang.org/x/exp/constraints"
 )
-
-func Sign[T constraints.Integer](x T) int {
-	if x < 0 {
-		return -1
-	}
-	if x > 0 {
-		return 1
-	}
-	return 0
-}
 
 type Problem struct {
 	Values []int32
