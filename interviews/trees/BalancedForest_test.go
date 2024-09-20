@@ -90,9 +90,10 @@ func Solve(root *Node) int32 {
 	// of at least one, two with the same total value must be disjoint (i.e. one
 	// cannot be the ancestor of another without having a higher total value).
 	lowerBound := (root.Subtotal + 2) / 3
-	// Any subtree must have a subtotal of at least 1; we're not going to
-	// synthesize one from a null subtree.
-	upperBound := (root.Subtotal - 1) / 2
+	// It's not clear from the problem statement, but yes, we are allowed to synthesize
+	// an entirely new node to balance the tree. So the highest value to try is half
+	// the total value of the tree.
+	upperBound := root.Subtotal / 2
 	for v := lowerBound; v <= upperBound; v++ {
 		// A subtree with this subtotal will have to be balanced.
 		target := root.Subtotal - 2*v
@@ -187,8 +188,8 @@ func TestSamples(t *testing.T) {
 
 	tests := []Test{
 		{"input00.txt", []int32{2, -1}},
-		//{"input01.txt", []int32{-1, 10, 13, 5, 297}},
-		// {"input02.txt", []int{1112, 2041, 959, -1, -1}},
+		{"input01.txt", []int32{-1, 10, 13, 5, 297}},
+		{"input02.txt", []int32{1112, 2041, 959, -1, -1}},
 		// {"input03.txt", []int{1714, 5016, 759000000000, -1, 6}},
 		// {"input04.txt", []int{1357940809, 397705399909, 439044899265, 104805614260, -1}},
 		// {"input05.txt", []int{24999687487500, 16217607772, 4, 0, -1}},
