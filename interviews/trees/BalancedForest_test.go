@@ -81,15 +81,15 @@ func Solve(root *Node) int64 {
 	// an entirely new node to balance the tree. So the highest value to try is half
 	// the total value of the tree.
 	upperBound := root.Subtotal / 2
-	for target := lowerBound; target <= upperBound; target++ {
+	for value := lowerBound; value <= upperBound; value++ {
 		// A subtree with this subtotal will have to be balanced.
-		remainder := root.Subtotal - 2*target
+		remainder := root.Subtotal - 2*value
 		// See https://pkg.go.dev/sort#Search
-		targetIndex := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= target })
+		targetIndex := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= value })
 		remainderIndex := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= remainder })
 		// Are there at least 2 subtrees with this subtotal? They must be disjoint.
-		if sortedBySubtotal[targetIndex].Subtotal == target && sortedBySubtotal[targetIndex+1].Subtotal == target {
-			return target - remainder		
+		if sortedBySubtotal[targetIndex].Subtotal == value && sortedBySubtotal[targetIndex+1].Subtotal == value {
+			return value - remainder		
 		}
 
 		// Second option: There are two disjoint subtrees such that if they're both removed from the
@@ -97,27 +97,27 @@ func Solve(root *Node) int64 {
 		// can then be balanced.
 
 		for i := remainderIndex; sortedBySubtotal[i].Subtotal == remainder; i++ {
-			for j := targetIndex; sortedBySubtotal[j].Subtotal == target; j++ {
+			for j := targetIndex; sortedBySubtotal[j].Subtotal == value; j++ {
 				if Disjoint(sortedBySubtotal[j], sortedBySubtotal[i]) {
-					return target - remainder
+					return value - remainder
 				}
 			}
 		}
 
 		// Third option: walk up the tree from one of the selection.
-		for i := targetIndex; sortedBySubtotal[i].Subtotal == target; i++ {
+		for i := targetIndex; sortedBySubtotal[i].Subtotal == value; i++ {
 			candidate := sortedBySubtotal[i]
 			for p := candidate.Parent; p != nil; p = p.Parent {
-				if p.Subtotal-target == remainder || p.Subtotal-target == target {
-					return target - remainder				}
+				if p.Subtotal-value == remainder || p.Subtotal-value == value {
+					return value - remainder				}
 			}
 		}
 
 		for i := remainderIndex; sortedBySubtotal[i].Subtotal == remainder; i++ {
 			candidate := sortedBySubtotal[i]
 			for p := candidate.Parent; p != nil; p = p.Parent {
-				if p.Subtotal-remainder == target {
-					return target - remainder
+				if p.Subtotal-remainder == value {
+					return value - remainder
 				}
 			}
 		}
