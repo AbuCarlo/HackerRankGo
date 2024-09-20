@@ -109,7 +109,8 @@ func Solve(root *Node) int64 {
 			candidate := sortedBySubtotal[i]
 			for p := candidate.Parent; p != nil; p = p.Parent {
 				if p.Subtotal-value == remainder || p.Subtotal-value == value {
-					return value - remainder				}
+					return value - remainder				
+				}
 			}
 		}
 
