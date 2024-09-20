@@ -130,6 +130,15 @@ func Solve(root *Node) int32 {
 				}
 			}
 		}
+
+		for i := blah; sortedBySubtotal[i].Subtotal == target; i++ {
+			candidate := sortedBySubtotal[i]
+			for p := candidate.Parent; p != nil; p = p.Parent {
+				if p.Subtotal - target == v {
+					return int32(v - target)
+				}
+			}
+		}
 	}
 
 	return -1
@@ -143,9 +152,8 @@ func mkNode(node *Node, nodes []*Node, adjacency [][]int32) {
 		}
 		child.Parent = node
 		node.Children = append(node.Children, child)
-		for _, c := range node.Children {
-			mkNode(c, nodes, adjacency)
-		}
+		
+		mkNode(child, nodes, adjacency)
 	}
 }
 
@@ -185,7 +193,7 @@ func TestSamples(t *testing.T) {
 
 	tests := []Test{
 		{"input00.txt", []int32{2, -1}},
-		// {"input01.txt", []int32{-1, 10, 13, 5, 297}},
+		//{"input01.txt", []int32{-1, 10, 13, 5, 297}},
 		// {"input02.txt", []int{1112, 2041, 959, -1, -1}},
 		// {"input03.txt", []int{1714, 5016, 759000000000, -1, 6}},
 		// {"input04.txt", []int{1357940809, 397705399909, 439044899265, 104805614260, -1}},
