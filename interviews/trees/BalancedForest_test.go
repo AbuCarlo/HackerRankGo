@@ -67,7 +67,7 @@ func mkArray(n *Node, sorted []*Node) []*Node {
 	return sorted
 }
  
-func Solve(root *Node) int32 {
+func Solve(root *Node) int64 {
 	wire(root)
 	sortedBySubtotal := mkArray(root, nil)
 	sort.Slice(sortedBySubtotal, func(i, j int) bool { return sortedBySubtotal[i].Subtotal < sortedBySubtotal[j].Subtotal })
@@ -88,8 +88,7 @@ func Solve(root *Node) int32 {
 		index := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= v })
 		// Are there at least 2 subtrees with this subtotal? They must be disjoint.
 		if sortedBySubtotal[index].Subtotal == v && sortedBySubtotal[index+1].Subtotal == v {
-			return int32(v - target)
-		}
+			return v - target		}
 
 		// Second option: There are two disjoint subtrees such that if they're both removed from the
 		// tree, the remaining value will have the same subtotal as one of them. The lesser subtree
@@ -99,7 +98,7 @@ func Solve(root *Node) int32 {
 		for i := blah; sortedBySubtotal[i].Subtotal == target; i++ {
 			for j := index; sortedBySubtotal[j].Subtotal == v; j++ {
 				if Disjoint(sortedBySubtotal[j], sortedBySubtotal[i]) {
-					return int32(v - target)
+					return v - target
 				}
 			}
 		}
@@ -109,8 +108,7 @@ func Solve(root *Node) int32 {
 			candidate := sortedBySubtotal[i]
 			for p := candidate.Parent; p != nil; p = p.Parent {
 				if p.Subtotal-v == target || p.Subtotal-v == v {
-					return int32(v - target)
-				}
+					return v - target				}
 			}
 		}
 
@@ -118,7 +116,7 @@ func Solve(root *Node) int32 {
 			candidate := sortedBySubtotal[i]
 			for p := candidate.Parent; p != nil; p = p.Parent {
 				if p.Subtotal-target == v {
-					return int32(v - target)
+					return v - target
 				}
 			}
 		}
@@ -162,7 +160,7 @@ func mkTree(c []int32, edges [][]int32) *Node {
 	return root
 }
 
-func balancedForest(c []int32, edges [][]int32) int32 {
+func balancedForest(c []int32, edges [][]int32) int64 {
 	tree := mkTree(c, edges)
 	return Solve(tree)
 }
@@ -170,18 +168,18 @@ func balancedForest(c []int32, edges [][]int32) int32 {
 func TestSamples(t *testing.T) {
 	type Test struct {
 		path     string
-		expected []int32
+		expected []int64
 	}
 
 	tests := []Test{
-		{"input00.txt", []int32{2, -1}},
-		{"input01.txt", []int32{-1, 10, 13, 5, 297}},
-		{"input02.txt", []int32{1112, 2041, 959, -1, -1}},
-		//{"input03.txt", []int32{1714, 5016, 759000000000, -1, 6}},
-		// {"input04.txt", []int{1357940809, 397705399909, 439044899265, 104805614260, -1}},
-		// {"input05.txt", []int{24999687487500, 16217607772, 4, 0, -1}},
-		{"input06.txt", []int32{19}},
-		{"input07.txt", []int32{4}},
+		{"input00.txt", []int64{2, -1}},
+		{"input01.txt", []int64{-1, 10, 13, 5, 297}},
+		{"input02.txt", []int64{1112, 2041, 959, -1, -1}},
+		// {"input03.txt", []int64{1714, 5016, 759000000000, -1, 6}},
+		// {"input04.txt", []int64{1357940809, 397705399909, 439044899265, 104805614260, -1}},
+		// {"input05.txt", []int64{24999687487500, 16217607772, 4, 0, -1}},
+		{"input06.txt", []int64{19}},
+		{"input07.txt", []int64{4}},
 	}
 
 	for _, test := range tests {
