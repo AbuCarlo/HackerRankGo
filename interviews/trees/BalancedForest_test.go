@@ -91,8 +91,8 @@ func Solve(root *Node) int64 {
 		if sortedBySubtotal[targetIndex].Subtotal == value && sortedBySubtotal[targetIndex+1].Subtotal == value {
 			return value - remainder		
 		}
-
-		remainderIndex := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= remainder })
+		// The slight optimization of cutting off the search at targetIndex has no effect!
+		remainderIndex := sort.Search(targetIndex, func(i int) bool { return sortedBySubtotal[i].Subtotal >= remainder })
 
 		// Second option: There are two disjoint subtrees such that if they're both removed from the
 		// tree, the remaining value will have the same subtotal as one of them. The lesser subtree
