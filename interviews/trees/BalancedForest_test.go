@@ -66,6 +66,7 @@ func mkMap(nodes []*Node) map[int64][]*Node {
 }
 
 func mkNode(node *Node, nodes []*Node, adjacency [][]int32) {
+	node.Children = make([]*Node, 0, len(adjacency[node.Id]))
 	for _, id := range adjacency[node.Id] {
 		child := nodes[id]
 		if child == node.Parent {
