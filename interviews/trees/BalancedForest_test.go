@@ -113,13 +113,20 @@ func Solve(root *Node) int64 {
 				if p.Subtotal-value == remainder || p.Subtotal-value == value {
 					return value - remainder				
 				}
+				if p.Subtotal-value >= value {
+					break
+				}
 			}
 		}
 
 		for i := remainderIndex; sortedBySubtotal[i].Subtotal == remainder; i++ {
 			candidate := sortedBySubtotal[i]
 			for p := candidate.Parent; p != nil; p = p.Parent {
-				if p.Subtotal-remainder == value {
+				if p.Subtotal-remainder >= value {
+					if p.Subtotal-remainder > value {
+						// Stop going up the tree.
+						break
+					}
 					return value - remainder
 				}
 			}
