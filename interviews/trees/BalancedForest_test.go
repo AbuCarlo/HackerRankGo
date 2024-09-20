@@ -86,11 +86,13 @@ func Solve(root *Node) int64 {
 		remainder := root.Subtotal - 2*value
 		// See https://pkg.go.dev/sort#Search
 		targetIndex := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= value })
-		remainderIndex := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= remainder })
+
 		// Are there at least 2 subtrees with this subtotal? They must be disjoint.
 		if sortedBySubtotal[targetIndex].Subtotal == value && sortedBySubtotal[targetIndex+1].Subtotal == value {
 			return value - remainder		
 		}
+
+		remainderIndex := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= remainder })
 
 		// Second option: There are two disjoint subtrees such that if they're both removed from the
 		// tree, the remaining value will have the same subtotal as one of them. The lesser subtree
