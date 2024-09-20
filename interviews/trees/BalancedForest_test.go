@@ -99,7 +99,7 @@ func Solve(root *Node) int32 {
 		// See https://pkg.go.dev/sort#Search
 		index := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= v })
 		// Are there at least 2 subtrees with this subtotal? They must be disjoint.
-		if  sortedBySubtotal[index].Subtotal == v && sortedBySubtotal[index+1].Subtotal == v {
+		if sortedBySubtotal[index].Subtotal == v && sortedBySubtotal[index+1].Subtotal == v {
 			return int32(v - target)
 		}
 
@@ -108,10 +108,9 @@ func Solve(root *Node) int32 {
 		// can then be balanced.
 
 		blah := sort.Search(len(sortedBySubtotal), func(i int) bool { return sortedBySubtotal[i].Subtotal >= target })
-		if sortedBySubtotal[blah].Subtotal == target {
-			// Filter out descendants.
-			for i := blah; sortedBySubtotal[i].Subtotal == target; i++ {
-				if Disjoint(sortedBySubtotal[index], sortedBySubtotal[i]) {
+		for i := blah; sortedBySubtotal[i].Subtotal == target; i++ {
+			for j := index; sortedBySubtotal[j].Subtotal == v; j++ {
+				if Disjoint(sortedBySubtotal[j], sortedBySubtotal[i]) {
 					return int32(v - target)
 				}
 			}
@@ -187,14 +186,14 @@ func TestSamples(t *testing.T) {
 	}
 
 	tests := []Test{
-		//{"input00.txt", []int32{2, -1}},
+		{"input00.txt", []int32{2, -1}},
 		//{"input01.txt", []int32{-1, 10, 13, 5, 297}},
 		// {"input02.txt", []int{1112, 2041, 959, -1, -1}},
 		// {"input03.txt", []int{1714, 5016, 759000000000, -1, 6}},
 		// {"input04.txt", []int{1357940809, 397705399909, 439044899265, 104805614260, -1}},
 		// {"input05.txt", []int{24999687487500, 16217607772, 4, 0, -1}},
 		{"input06.txt", []int32{19}},
-		//{"input07.txt", []int32{4}},
+		{"input07.txt", []int32{4}},
 	}
 
 	for _, test := range tests {
