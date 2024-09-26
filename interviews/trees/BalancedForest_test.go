@@ -145,6 +145,10 @@ func balancedForest(c []int32, edges [][]int32) int64 {
 		}
 
 		if subtree.Subtotal < lowerBound {
+			if subtree.Subtotal % 2 != root.Subtotal % 2 {
+				continue
+			}
+
 			target := (root.Subtotal - subtree.Subtotal) / 2
 
 			mutated := make(map[int64]*Node)
@@ -200,11 +204,11 @@ func TestSamples(t *testing.T) {
 		{"input00.txt", []int64{2, -1}},
 		{"input01.txt", []int64{-1, 10, 13, 5, 297}},
 		{"input02.txt", []int64{1112, 2041, 959, -1, -1}},
-		// {"input03.txt", []int64{1714, 5016, 759000000000, -1, 6}},
-		// {"input04.txt", []int64{1357940809, 397705399909, 439044899265, 104805614260, -1}},
-		// {"input05.txt", []int64{24999687487500, 16217607772, 4, 0, -1}},
-		// {"input06.txt", []int64{19}},
-		// {"input07.txt", []int64{4}},
+		{"input03.txt", []int64{1714, 5016, 759000000000, -1, 6}},
+		{"input04.txt", []int64{1357940809, 397705399909, 439044899265, 104805614260, -1}},
+		{"input05.txt", []int64{24999687487500, 16217607772, 4, 0, -1}},
+		{"input06.txt", []int64{19}},
+		{"input07.txt", []int64{4}},
 	}
 
 	for _, test := range tests {
