@@ -2,9 +2,12 @@ package trees
 
 import (
 	"bufio"
+	"fmt"
 	"io"
+	"math"
 	"math/rand"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -21,6 +24,16 @@ type Node struct {
 	Subtotal int64
 	Parent   *Node
 	Children []*Node
+}
+
+func (n *Node) String() string {
+	s := fmt.Sprintf("{Id: %d, Value: %d, Subtotal: %d, Children: ", n.Id, n.Value, n.Subtotal)
+	children := []int32{}
+	for _, child := range n.Children {
+		children = append(children, child.Id)
+	}
+	s += fmt.Sprintf("%v}", children)
+	return s
 }
 
 func wire(node *Node) {
@@ -68,10 +81,10 @@ func mkMap(nodes []*Node) map[int64][]*Node {
 func mkNode(node *Node, nodes []*Node, adjacency [][]int32) {
 	node.Children = make([]*Node, 0, len(adjacency[node.Id]))
 	for _, id := range adjacency[node.Id] {
-		child := nodes[id]
-		if child == node.Parent {
+		if node.Parent != nil && id == node.Parent.Id {
 			continue
 		}
+		child := nodes[id]
 		child.Parent = node
 		node.Children = append(node.Children, child)
 
@@ -94,7 +107,8 @@ func mkTree(c []int32, edges [][]int32) ([]*Node, *Node) {
 		nodes[i + 1] = &Node{int32(i + 1), cost, 0, nil, nil}
 	}
 
-	r := rand.Int31n(int32(len(c)-1)) + 1
+	r := rand.Intn(len(nodes) - 1) + 1
+	// TODO: Is 1 always the root?
 	root := nodes[r]
 	mkNode(root, nodes, adjacency)
 
@@ -104,7 +118,10 @@ func mkTree(c []int32, edges [][]int32) ([]*Node, *Node) {
 func balancedForest(c []int32, edges [][]int32) int64 {
 	nodes, root := mkTree(c, edges)
 	wire(root)
-	sortedBySubtotal := mkMap(nodes)
+	// TODO: Keep only counts.
+	sort.Slice(nodes, func (i, j int) bool { return nodes[i].Subtotal <= nodes[j].Subtotal })
+	// TODO: Get rid of children.
+	countsBySubtotal := mkMap(nodes)
 
 	// First option: two disjoint subtrees have the same total value. Detach them
 	// and add a balancing node to the remaining tree. Since every node has a value
@@ -115,57 +132,62 @@ func balancedForest(c []int32, edges [][]int32) int64 {
 	// an entirely new node to balance the tree. So the highest value to try is half
 	// the total value of the tree.
 	upperBound := root.Subtotal / 2
-	for value := lowerBound; value <= upperBound; value++ {
-		// A subtree with this subtotal will have to be balanced.
-		remainder := root.Subtotal - 2*value
-		// See https://pkg.go.dev/sort#Search
-		targets := sortedBySubtotal[value]
 
-		// Are there at least 2 subtrees with this subtotal? They must be disjoint.
-		if len(targets) > 1 {
-			return value - remainder
+	current := int64(math.MaxInt64)
+
+	for _, subtree := range nodes {
+		// This is the minimum possible result.
+		if current == 3 - (root.Subtotal % 3) {
+			break
 		}
-		// The slight optimization of cutting off the search at targetIndex has no effect!
-		remainders := sortedBySubtotal[remainder]
+		if subtree.Subtotal > upperBound {
+			break
+		}
 
-		// Second option: There are two disjoint subtrees such that if they're both removed from the
-		// tree, the remaining value will have the same subtotal as one of them. The lesser subtree
-		// can then be balanced.
+		if subtree.Subtotal < lowerBound {
+			target := (root.Subtotal - subtree.Subtotal) / 2
 
-		for _, remainderSubtree := range remainders {
-			for _, targetSubtree := range targets {
-				if Disjoint(targetSubtree, remainderSubtree) {
-					return value - remainder
-				}
+			mutated := make(map[int64]*Node)
+			blah := make(map[*Node]struct{})
+			for p := subtree.Parent; p != nil; p = p.Parent {
+				mutated[p.Subtotal - subtree.Subtotal] = p
+				blah[p] = struct{}{}
 			}
-		}
 
-		// Third option: walk up the tree from one of the selection.
-		for _, targetSubtree := range targets {
-			for p := targetSubtree.Parent; p != nil; p = p.Parent {
-				if p.Subtotal-value == remainder || p.Subtotal-value == value {
-					return value - remainder				
-				}
-				if p.Subtotal-value >= value {
-					break
-				}
-			}
-		}
-
-		for _, remainderSubtree := range remainders {
-			for p := remainderSubtree.Parent; p != nil; p = p.Parent {
-				if p.Subtotal-remainder >= value {
-					if p.Subtotal-remainder > value {
-						// Stop going up the tree.
+			if _, ok := mutated[target]; ok {
+				current = min(current, target - subtree.Subtotal)
+			} else if nodes, ok := countsBySubtotal[target]; ok {
+				for _, n := range nodes {
+					if _, nok := blah[n]; !nok {
+						current = min(current, target - subtree.Subtotal)
 						break
 					}
-					return value - remainder
+				}				
+			}
+
+		} else {
+			target := subtree.Subtotal
+			remainder := root.Subtotal - 2 * target
+
+			if len(countsBySubtotal[target]) > 1 {
+				current = min(current, target - remainder)
+				continue
+			}
+
+			for p := subtree.Parent; p != nil; p = p.Parent {
+				if p.Subtotal == 2 * target || p.Subtotal == target + remainder {
+					current = min(current, target - remainder)
+					break
 				}
 			}
 		}
 	}
 
-	return -1
+	if current == int64(math.MaxInt64) {
+		return -1
+	}
+
+	return current
 }
 
 func TestSamples(t *testing.T) {
@@ -176,8 +198,8 @@ func TestSamples(t *testing.T) {
 
 	tests := []Test{
 		{"input00.txt", []int64{2, -1}},
-		// {"input01.txt", []int64{-1, 10, 13, 5, 297}},
-		// {"input02.txt", []int64{1112, 2041, 959, -1, -1}},
+		{"input01.txt", []int64{-1, 10, 13, 5, 297}},
+		{"input02.txt", []int64{1112, 2041, 959, -1, -1}},
 		// {"input03.txt", []int64{1714, 5016, 759000000000, -1, 6}},
 		// {"input04.txt", []int64{1357940809, 397705399909, 439044899265, 104805614260, -1}},
 		// {"input05.txt", []int64{24999687487500, 16217607772, 4, 0, -1}},
