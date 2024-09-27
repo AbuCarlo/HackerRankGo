@@ -14,7 +14,8 @@ def recurse(k, c):
     return max(x, y)
 
 def luckBalance(k, c):
-    c = sorted(c, key=lambda t: t[0])
+    # larger values first
+    c = sorted(c, key=lambda t: -t[0])
     return recurse(k, c)
 
 print(luckBalance(3, sample_0))
