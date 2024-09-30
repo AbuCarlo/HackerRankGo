@@ -2,7 +2,7 @@ package graphs
 
 /* 
 	The problem is to find the largest disjoint set in a graph, i.e. 
-	to implemnent the "disjoint sets" algorithm with path reduction.
+	to implement the "disjoint sets" algorithm with path reduction.
 */
 
 import (
@@ -18,7 +18,6 @@ type _Cell struct {
 
 func maxRegion(grid [][]int32) int32 {
 	adjacency := make(map[_Cell][]_Cell)
-	disjoints := make(map[_Cell][]_Cell)
 
 	for i, r := range grid {
 		for j, value := range r {
@@ -54,8 +53,11 @@ func maxRegion(grid [][]int32) int32 {
 
 	parents := make(map[_Cell]_Cell)
 
+	disjoints := make(map[_Cell][]_Cell)
+
 	for cell := range adjacency {
 		parents[cell] = cell
+		// Initially all singletons.
 		disjoints[cell] = []_Cell{cell}
 	}
 
