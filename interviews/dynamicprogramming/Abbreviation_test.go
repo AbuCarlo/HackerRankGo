@@ -49,7 +49,7 @@ func abbreviateFrom(memo Memo, source []rune, sourcePosition int, target []rune,
 }
 
 // Abbreviate is a version of "longest common subsequence".
-// See https://www.hackerrank.com/challenges/abbr/problem?h_l=interview&playlist_slugs%5B%5D=interview-preparation-kit&playlist_slugs%5B%5D=dynamic-programming.
+// See https://www.hackerrank.com/challenges/abbr/problem
 func Abbreviate(source string, target string) bool {
 	a := []rune(source)
 	b := []rune(target)
@@ -72,7 +72,7 @@ func TestAbbreviation(t *testing.T) {
 		{"ABC", "ABC", true},
 		{"abCde", "C", true},
 		// I'm puzzled about this one.
-		// {"abCde", "Cde", false},
+		{"abCd", "Cd", false},
 		{"abcdE", "E", true},
 	}
 	for _, test := range tests {
