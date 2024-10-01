@@ -1,6 +1,9 @@
 package graphs
 
-/* 
+/*
+
+	https://www.hackerrank.com/challenges/ctci-connected-cell-in-a-grid/problem
+	
 	The problem is to find the largest disjoint set in a graph, i.e. 
 	to implement the "disjoint sets" algorithm with path reduction.
 */

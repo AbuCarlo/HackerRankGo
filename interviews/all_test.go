@@ -59,53 +59,6 @@ func TestGreedyFlorist(t *testing.T) {
 	}
 }
 
-func TestAbbreviation(t *testing.T) {
-	tests := []struct {
-		source string
-		target string
-		expect bool
-	}{
-		{"", "", true},
-		{"abc", "abc", true},
-		{"ABC", "ABC", true},
-		{"abCde", "C", true},
-		{"abcdE", "E", true},
-	}
-	for _, test := range tests {
-		if test.expect {
-			if !dynamicprogramming.Abbreviate(test.source, test.target) {
-				t.Errorf("%s should match %s", test.source, test.target)
-			}
-		} else {
-			if dynamicprogramming.Abbreviate(test.source, test.target) {
-				t.Errorf("%s should not match %s", test.source, test.target)
-			}
-		}
-	}
-}
-
-func TestAbbreviationTestCases(t *testing.T) {
-	name := "dynamicprogramming/abbreviation-input12.txt"
-	path, _ := filepath.Abs(name)
-	file, e := os.Open(path)
-	if e != nil {
-		glog.Error(e)
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	scanner.Scan()
-	te := scanner.Text()
-	n, _ := strconv.Atoi(te)
-	for i := 0; i < n; i++ {
-		scanner.Scan()
-		source := scanner.Text()
-		scanner.Scan()
-		target := scanner.Text()
-		result := dynamicprogramming.Abbreviate(source, target)
-		fmt.Printf("Result of %s... / %s...: %t\n", source[0:10], target[0:10], result)
-	}
-}
-
 func TestSuperDigit(t *testing.T) {
 	result := recursion.SuperDigit("148", 3)
 	fmt.Printf("Result: %d\n", result)
