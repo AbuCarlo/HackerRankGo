@@ -12,3 +12,5 @@ To run all tests:
 ...or, for verbose output:
 
     go test ./... -v
+
+It's more likely that you'll run particular tests or benchmarks directly from IDE.
