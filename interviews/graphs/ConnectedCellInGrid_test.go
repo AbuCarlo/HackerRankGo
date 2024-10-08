@@ -2,13 +2,14 @@ package graphs
 
 /*
 	https://www.hackerrank.com/challenges/ctci-connected-cell-in-a-grid/problem
-	
-	The problem is to find the largest disjoint set in a graph, i.e. 
+
+	The problem is to find the largest disjoint set in a graph, i.e.
 	to implement the "disjoint sets" algorithm with path reduction.
 */
 
 import (
 	"bufio"
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -77,11 +78,13 @@ func maxRegion(grid [][]int32) int32 {
 	// Now give each subgraph its adjacency matrix.
 	for u, s := range adjacency {
 		for _, v := range s {
+			// This can't be lifted out of the loop: the root may have changed.
 			x := _findRoot(u)
 			y := _findRoot(v)
 			if x == y {
 				continue
 			}
+			// Minor optimization: combine the smaller subgraph into the larger one.
 			if len(disjoints[x]) < len(disjoints[y]) {
 				x, y = y, x
 			}
@@ -152,12 +155,14 @@ func TestGridSamples(t *testing.T) {
 	}
 
 	for i, test := range testCases {
-		reader := bufio.NewReader(strings.NewReader(test.input))
-		grid := loadGrid(reader)
-		actual := maxRegion(grid)
-		if actual != test.expected {
+		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
+			reader := bufio.NewReader(strings.NewReader(test.input))
+			grid := loadGrid(reader)
+			actual := maxRegion(grid)
+			if actual != test.expected {
 			t.Errorf("Test %d expected %d; got %d", i, test.expected, actual)
-		}
+			}
+		})
 	}
 
 }
