@@ -1,5 +1,12 @@
 package recursion
 
+// https://www.hackerrank.com/challenges/recursive-digit-sum/problem
+
+import (
+	"fmt"
+	"testing"
+)
+
 // SuperDigit really does not need recursion.
 func SuperDigit(n string, k int32) int32 {
 	var d int32 = 0
@@ -17,4 +24,9 @@ func SuperDigit(n string, k int32) int32 {
 		}
 	}
 	return result
+}
+
+func TestSuperDigit(t *testing.T) {
+	result := SuperDigit("148", 3)
+	fmt.Printf("Result: %d\n", result)
 }

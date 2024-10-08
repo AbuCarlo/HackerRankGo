@@ -1,11 +1,13 @@
 package graphs
 
-// See https://en.wikipedia.org/wiki/Disjoint-set_data_structure
+/*
+	https://www.hackerrank.com/challenges/torque-and-development/problem
 
-/* 
 	The problem is to find the minimal spanning tree of every disconnected
-	subgraph, then determine if it's cheaper to build a library on each 
+	subgraph, then determine if it's cheaper to build a library on each
 	one, or connect them by roads and build a single library.
+
+	See https://en.wikipedia.org/wiki/Disjoint-set_data_structure
 */
 
 import (
@@ -26,7 +28,7 @@ func NewUndirectedGraph() *UndirectedGraph {
 	return &g
 }
 
-// "size" / "order" cf. https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)#Graph
+// "size" vs. "order" cf. https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)#Graph
 
 func (g *UndirectedGraph) Order() int32 {
 	return int32(len(g.adjacency))
@@ -37,6 +39,7 @@ func (g *UndirectedGraph) Size() int32 {
 	for _, s := range g.adjacency {
 		result += s.Size()
 	}
+	// In an undirected graph, we double the edges.
 	result /= 2
 	return int32(result)
 }
@@ -186,7 +189,7 @@ func TestPathGraph(t *testing.T) {
 		if len(trees) != 1 {
 			t.Errorf("A path graph should have 1 connected component, not %d", len(vertices))
 		}
-		if trees[0].Order() - 1 != trees[0].Size() {
+		if trees[0].Order()-1 != trees[0].Size() {
 			t.Errorf("In an MST, |V| - 1 == |E| (got %d, %d)", trees[0].Order(), trees[0].Size())
 		}
 	}
@@ -212,7 +215,7 @@ func TestStarGraph(t *testing.T) {
 		if len(trees) != 1 {
 			t.Errorf("A star graph of %d nodes centered on %d should have 1 connected subgraph, not %d", order, v, len(trees))
 		}
-		if trees[0].Order() - 1 != trees[0].Size() {
+		if trees[0].Order()-1 != trees[0].Size() {
 			t.Errorf("In an MST, |V| - 1 == |E| (got %d, %d)", trees[0].Order(), trees[0].Size())
 		}
 	}

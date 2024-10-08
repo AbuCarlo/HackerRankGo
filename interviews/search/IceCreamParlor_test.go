@@ -1,6 +1,11 @@
 package search
 
-import "sort"
+// https://www.hackerrank.com/challenges/ctci-ice-cream-parlor/problem
+
+import (
+	"sort"
+	"testing"
+)
 
 // FindPair returns the indices of the values
 // adding up to "money"
@@ -38,4 +43,13 @@ func FindPair(cost []int32, money int32) (int, int) {
 		return low, high
 	} // else
 	return high, low
+}
+
+func TestIceCream(t *testing.T) {
+	var sample00 = []int32{1, 4, 5, 3, 2}
+	var x, y = FindPair(sample00, 4)
+	println(x, y)
+	var sample01 = []int32{2, 2, 4, 3}
+	var l, r = FindPair(sample01, 4)
+	println(l, r)
 }

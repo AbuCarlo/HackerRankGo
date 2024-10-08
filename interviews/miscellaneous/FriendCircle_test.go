@@ -1,5 +1,11 @@
 package miscellaneous
 
+/*
+	https://www.hackerrank.com/challenges/friend-circle-queries/problem
+
+	This is a graph problem: find the largest disjoint set.
+*/
+
 import (
 	"bufio"
 	"fmt"

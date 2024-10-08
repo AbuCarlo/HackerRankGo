@@ -1,5 +1,12 @@
 package recursion
 
+// https://www.hackerrank.com/challenges/ctci-recursive-staircase/problem
+
+import (
+	"fmt"
+	"testing"
+)
+
 const Modulus int64 = 10000000007
 
 func Climb(n int32) int32 {
@@ -16,4 +23,9 @@ func Climb(n int32) int32 {
 		ways[i] %= Modulus
 	}
 	return int32(ways[n])
+}
+
+func TestDavisStaircase(t *testing.T) {
+	result := Climb(7)
+	fmt.Printf("Result: %v\n", result)
 }

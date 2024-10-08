@@ -1,5 +1,7 @@
 package dynamicprogramming
 
+// https://www.hackerrank.com/challenges/abbr/problem
+
 import (
 	"bufio"
 	"fmt"
@@ -8,8 +10,6 @@ import (
 	"strconv"
 	"testing"
 	"unicode"
-
-	"github.com/golang/glog"
 )
 
 type Memo map[int]map[int]bool
@@ -89,11 +89,11 @@ func TestAbbreviation(t *testing.T) {
 }
 
 func TestAbbreviationTestCases(t *testing.T) {
-	name := "dynamicprogramming/abbreviation-input12.txt"
+	name := "abbreviation-inputs/input12.txt"
 	path, _ := filepath.Abs(name)
 	file, e := os.Open(path)
 	if e != nil {
-		glog.Error(e)
+		t.Error(e)
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)

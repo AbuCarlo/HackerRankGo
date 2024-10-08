@@ -1,6 +1,11 @@
-package dynamicprogramming
+package greedy
 
-import "sort"
+// https://www.hackerrank.com/challenges/greedy-florist/problem
+
+import (
+	"sort"
+	"testing"
+)
 
 // Optimize returns the minimum cost for k customers
 // to buy all the flowers whose prices are given in c.
@@ -19,4 +24,15 @@ func Optimize(k int32, costs[]int32) int32 {
 	}
 
 	return result
+}
+
+func TestGreedyFlorist(t *testing.T) {
+	result00 := Optimize(3, []int32{2, 5, 6})
+	if result00 != 13 {
+		t.Errorf("got %d, want %d", result00, 5)
+	}
+	result01 := Optimize(2, []int32{2, 5, 6})
+	if result01 != 15 {
+		t.Errorf("got %d, want %d", result00, 5)
+	}
 }

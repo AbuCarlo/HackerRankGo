@@ -1,5 +1,7 @@
 package miscellaneous
 
+// https://www.hackerrank.com/challenges/maximum-xor/problem
+
 import (
 	"math/bits"
 	"slices"

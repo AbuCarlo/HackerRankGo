@@ -1,5 +1,7 @@
 package search
 
+// https://www.hackerrank.com/challenges/making-candies/problem
+
 import (
 	"math"
 	"testing"

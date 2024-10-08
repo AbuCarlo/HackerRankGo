@@ -1,5 +1,7 @@
 package recursion
 
+// https://www.hackerrank.com/challenges/crossword-puzzle/problem
+
 import (
 	"math/rand"
 	"strings"
@@ -16,7 +18,7 @@ type Slot struct {
 
 func populateGrid() [][]rune {
 	template := make([]rune, Size)
-	for i, _ := range template {
+	for i := range template {
 		template[i] = '+'
 	}
 	rows := [][]rune{}
