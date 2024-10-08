@@ -96,7 +96,9 @@ func maxRegion(grid [][]int32) int32 {
 
 	result := 0
 	for _, d := range disjoints {
-		result = max(result, len(d))
+		if len(d) > result {
+			result = len(d)
+		}
 	}
 
 	return int32(result)
@@ -155,7 +157,7 @@ func TestGridSamples(t *testing.T) {
 	}
 
 	for i, test := range testCases {
-		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Sample_%d", i), func(t *testing.T) {
 			reader := bufio.NewReader(strings.NewReader(test.input))
 			grid := loadGrid(reader)
 			actual := maxRegion(grid)
