@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"pgregory.net/rapid"
 )
 
 type _Cell struct {
@@ -123,6 +125,29 @@ func loadGrid(reader *bufio.Reader) [][]int32 {
 	}
 
 	return grid
+}
+
+func TestAllOnes(t *testing.T) {
+	f := func(t *rapid.T) {
+		height := rapid.Int32Range(0, 64).Draw(t, "height")
+		width := rapid.Int32Range(0, 64).Draw(t, "width")
+
+		row := make([]int32, width)
+		for i := range(row) {
+			row[i] = 1
+		}
+		grid := make([][]int32, height)
+		for i := range grid {
+			grid[i] = row
+		}
+
+		actual := maxRegion(grid)
+		if actual != height * width {
+			t.Errorf("%d by %d grid should produce answer %d", height, width, height * width)
+		}
+	}
+
+	rapid.Check(t, f)
 }
 
 func TestGridSamples(t *testing.T) {
