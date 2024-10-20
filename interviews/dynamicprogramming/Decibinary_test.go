@@ -368,7 +368,7 @@ func readTestFiles(t *testing.T, n int) ([]int64, []int64) {
 
 func TestBoundaries(t *testing.T) {
 
-	testFileNumbers := []int{ 3, 7 }
+	testFileNumbers := []int{ 0, 3, 7, 9, 10 }
 
 	for _, n := range testFileNumbers {
 
